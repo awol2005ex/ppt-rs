@@ -58,7 +58,7 @@ cargo run -- create my_presentation.pptx
 cargo run -- create my_presentation.pptx --title "My Title" --slides 5
 ```
 
-#### Using the Library
+#### Using the Library - Simple Presentation
 
 ```rust
 use pptx_rs::generator;
@@ -67,6 +67,37 @@ use std::fs;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Generate a PPTX with 5 slides
     let pptx_data = generator::create_pptx("My Presentation", 5)?;
+    
+    // Write to file
+    fs::write("presentation.pptx", pptx_data)?;
+    
+    Ok(())
+}
+```
+
+#### Using the Library - Complex Presentation with Content
+
+```rust
+use pptx_rs::generator::{SlideContent, create_pptx_with_content};
+use std::fs;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create slides with content
+    let slides = vec![
+        SlideContent::new("Introduction")
+            .add_bullet("Welcome to the presentation")
+            .add_bullet("Today's agenda"),
+        SlideContent::new("Key Points")
+            .add_bullet("First important point")
+            .add_bullet("Second important point")
+            .add_bullet("Third important point"),
+        SlideContent::new("Conclusion")
+            .add_bullet("Summary of key takeaways")
+            .add_bullet("Next steps"),
+    ];
+    
+    // Generate PPTX with content
+    let pptx_data = create_pptx_with_content("My Presentation", slides)?;
     
     // Write to file
     fs::write("presentation.pptx", pptx_data)?;

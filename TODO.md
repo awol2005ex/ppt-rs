@@ -1,20 +1,44 @@
 # TODO - PPTX Rust Translation
 
+## Completed
+
+### 1. Basic PPTX Generation ✓
+- [x] ZIP file writing with proper structure
+- [x] XML generation for all required components
+- [x] Proper ECMA-376 compliance
+- [x] CLI tool for basic PPTX creation
+- [x] Support for custom slide titles
+
+### 2. Complex PPTX Generation ✓
+- [x] Slide content with bullet points
+- [x] Text formatting (bold titles, regular text)
+- [x] Multiple text boxes per slide
+- [x] SlideContent builder API
+- [x] Examples for business, training, and proposal presentations
+
 ## High Priority
 
-### 1. ZIP File Handling
-- [ ] Implement ZIP reading in `opc/package.rs`
-- [ ] Implement ZIP writing in `opc/package.rs`
-- [ ] Handle ZIP relationships
-- [ ] Extract content types
+### 1. Advanced Content Features
+- [ ] Image insertion and embedding
+- [ ] Shape creation (rectangles, circles, arrows, etc.)
+- [ ] Shape colors and fills
+- [ ] Text formatting (italic, underline, colors)
+- [ ] Font selection and sizing
 
-### 2. XML Parsing & Serialization
-- [ ] Implement XML parsing in `oxml/xmlchemy.rs`
-- [ ] Implement XML serialization
-- [ ] Handle namespaces properly
-- [ ] Create element factory
+### 2. Tables & Charts
+- [ ] Table creation and formatting
+- [ ] Chart generation (bar, line, pie)
+- [ ] Chart data binding
+- [ ] Legend and axis labels
 
-### 3. Parts Implementation
+### 3. Reading & Modification
+- [ ] ZIP reading in `opc/package.rs`
+- [ ] XML parsing in `oxml/xmlchemy.rs`
+- [ ] Open existing PPTX files
+- [ ] Modify existing presentations
+- [ ] Add slides to existing presentations
+
+### 4. Parts Implementation
 - [ ] `parts/presentation.rs` - PresentationPart
 - [ ] `parts/slide.rs` - SlidePart
 - [ ] `parts/image.rs` - ImagePart

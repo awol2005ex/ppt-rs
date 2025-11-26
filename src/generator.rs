@@ -4,6 +4,27 @@ use std::io::{Write, Cursor};
 use zip::ZipWriter;
 use zip::write::FileOptions;
 
+/// Slide content for more complex presentations
+#[derive(Clone, Debug)]
+pub struct SlideContent {
+    pub title: String,
+    pub content: Vec<String>,
+}
+
+impl SlideContent {
+    pub fn new(title: &str) -> Self {
+        SlideContent {
+            title: title.to_string(),
+            content: Vec::new(),
+        }
+    }
+
+    pub fn add_bullet(mut self, text: &str) -> Self {
+        self.content.push(text.to_string());
+        self
+    }
+}
+
 /// Create a minimal but valid PPTX file
 pub fn create_pptx(title: &str, slides: usize) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let buffer = Vec::new();
@@ -77,6 +98,92 @@ pub fn create_pptx(title: &str, slides: usize) -> Result<Vec<u8>, Box<dyn std::e
 
     // 13. Create docProps/app.xml
     let app_props = create_app_props_xml(slides);
+    zip.start_file("docProps/app.xml", options)?;
+    zip.write_all(app_props.as_bytes())?;
+
+    let cursor = zip.finish()?;
+    Ok(cursor.into_inner())
+}
+
+/// Create a PPTX file with custom slide content
+pub fn create_pptx_with_content(
+    title: &str,
+    slides: Vec<SlideContent>,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let buffer = Vec::new();
+    let cursor = Cursor::new(buffer);
+    let mut zip = ZipWriter::new(cursor);
+    let options = FileOptions::default();
+
+    let slide_count = slides.len();
+
+    // 1. Create [Content_Types].xml
+    let content_types = create_content_types_xml(slide_count);
+    zip.start_file("[Content_Types].xml", options)?;
+    zip.write_all(content_types.as_bytes())?;
+
+    // 2. Create _rels/.rels
+    let rels = create_rels_xml();
+    zip.start_file("_rels/.rels", options)?;
+    zip.write_all(rels.as_bytes())?;
+
+    // 3. Create ppt/_rels/presentation.xml.rels
+    let pres_rels = create_presentation_rels_xml(slide_count);
+    zip.start_file("ppt/_rels/presentation.xml.rels", options)?;
+    zip.write_all(pres_rels.as_bytes())?;
+
+    // 4. Create ppt/presentation.xml
+    let presentation = create_presentation_xml(title, slide_count);
+    zip.start_file("ppt/presentation.xml", options)?;
+    zip.write_all(presentation.as_bytes())?;
+
+    // 5. Create ppt/slides/slide*.xml with custom content
+    for (i, slide) in slides.iter().enumerate() {
+        let slide_num = i + 1;
+        let slide_xml = create_slide_xml_with_content(slide_num, slide);
+        zip.start_file(&format!("ppt/slides/slide{}.xml", slide_num), options)?;
+        zip.write_all(slide_xml.as_bytes())?;
+    }
+
+    // 6. Create ppt/slides/_rels/slide*.xml.rels
+    for i in 1..=slide_count {
+        let slide_rels = create_slide_rels_xml();
+        zip.start_file(&format!("ppt/slides/_rels/slide{}.xml.rels", i), options)?;
+        zip.write_all(slide_rels.as_bytes())?;
+    }
+
+    // 7. Create ppt/slideLayouts/slideLayout1.xml
+    let slide_layout = create_slide_layout_xml();
+    zip.start_file("ppt/slideLayouts/slideLayout1.xml", options)?;
+    zip.write_all(slide_layout.as_bytes())?;
+
+    // 8. Create ppt/slideLayouts/_rels/slideLayout1.xml.rels
+    let layout_rels = create_layout_rels_xml();
+    zip.start_file("ppt/slideLayouts/_rels/slideLayout1.xml.rels", options)?;
+    zip.write_all(layout_rels.as_bytes())?;
+
+    // 9. Create ppt/slideMasters/slideMaster1.xml
+    let slide_master = create_slide_master_xml();
+    zip.start_file("ppt/slideMasters/slideMaster1.xml", options)?;
+    zip.write_all(slide_master.as_bytes())?;
+
+    // 10. Create ppt/slideMasters/_rels/slideMaster1.xml.rels
+    let master_rels = create_master_rels_xml();
+    zip.start_file("ppt/slideMasters/_rels/slideMaster1.xml.rels", options)?;
+    zip.write_all(master_rels.as_bytes())?;
+
+    // 11. Create ppt/theme/theme1.xml
+    let theme = create_theme_xml();
+    zip.start_file("ppt/theme/theme1.xml", options)?;
+    zip.write_all(theme.as_bytes())?;
+
+    // 12. Create docProps/core.xml
+    let core_props = create_core_props_xml(title);
+    zip.start_file("docProps/core.xml", options)?;
+    zip.write_all(core_props.as_bytes())?;
+
+    // 13. Create docProps/app.xml
+    let app_props = create_app_props_xml(slide_count);
     zip.start_file("docProps/app.xml", options)?;
     zip.write_all(app_props.as_bytes())?;
 
@@ -216,6 +323,125 @@ fn create_slide_xml(slide_num: usize, title: &str) -> String {
 </p:sld>"#,
         slide_title
     )
+}
+
+fn create_slide_xml_with_content(_slide_num: usize, content: &SlideContent) -> String {
+    let mut xml = format!(
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+<p:cSld>
+<p:bg>
+<p:bgRef idx="1001">
+<a:schemeClr val="bg1"/>
+</p:bgRef>
+</p:bg>
+<p:spTree>
+<p:nvGrpSpPr>
+<p:cNvPr id="1" name=""/>
+<p:cNvGrpSpPr/>
+<p:nvPr/>
+</p:nvGrpSpPr>
+<p:grpSpPr>
+<a:xfrm>
+<a:off x="0" y="0"/>
+<a:ext cx="9144000" cy="6858000"/>
+<a:chOff x="0" y="0"/>
+<a:chExt cx="9144000" cy="6858000"/>
+</a:xfrm>
+</p:grpSpPr>
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="2" name="Title"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="title"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="274638"/>
+<a:ext cx="8230200" cy="1143000"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>
+<a:p>
+<a:r>
+<a:rPr lang="en-US" sz="4400" b="1"/>
+<a:t>{}</a:t>
+</a:r>
+</a:p>
+</p:txBody>
+</p:sp>"#,
+        escape_xml(&content.title)
+    );
+
+    // Add content text box with bullet points
+    if !content.content.is_empty() {
+        xml.push_str(
+            r#"
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="3" name="Content"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="body" idx="1"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="1600200"/>
+<a:ext cx="8230200" cy="4572000"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>"#
+        );
+
+        for (i, bullet) in content.content.iter().enumerate() {
+            let level = if i == 0 { 0 } else { 0 };
+            xml.push_str(&format!(
+                r#"
+<a:p>
+<a:pPr lvl="{}"/>
+<a:r>
+<a:rPr lang="en-US" sz="2800"/>
+<a:t>{}</a:t>
+</a:r>
+</a:p>"#,
+                level,
+                escape_xml(bullet)
+            ));
+        }
+
+        xml.push_str(
+            r#"
+</p:txBody>
+</p:sp>"#
+        );
+    }
+
+    xml.push_str(
+        r#"
+</p:spTree>
+</p:cSld>
+<p:clrMapOvr>
+<a:masterClrMapping/>
+</p:clrMapOvr>
+</p:sld>"#
+    );
+
+    xml
+}
+
+fn escape_xml(s: &str) -> String {
+    s.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&apos;")
 }
 
 fn create_slide_rels_xml() -> String {
