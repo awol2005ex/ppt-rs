@@ -1,4 +1,4 @@
-# TODO - PPTX Rust Translation
+# TODO - PPTX-RS Development
 
 ## Completed
 
@@ -134,7 +134,6 @@
 
 - [ ] Complete API documentation
 - [ ] Add usage examples
-- [ ] Create migration guide from python-pptx
 - [ ] Add troubleshooting guide
 
 ## Performance Optimization

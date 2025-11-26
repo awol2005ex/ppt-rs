@@ -2,9 +2,10 @@
 
 use std::fs;
 use std::path::PathBuf;
-use crate::generator;
+use crate::generator::{self, SlideContent};
 
 pub struct CreateCommand;
+pub struct FromMarkdownCommand;
 pub struct InfoCommand;
 
 impl CreateCommand {
@@ -33,6 +34,91 @@ impl CreateCommand {
             .map_err(|e| format!("Failed to write file: {}", e))?;
 
         Ok(())
+    }
+}
+
+impl FromMarkdownCommand {
+    pub fn execute(
+        input: &str,
+        output: &str,
+        title: Option<&str>,
+    ) -> Result<(), String> {
+        // Read markdown file
+        let md_content = fs::read_to_string(input)
+            .map_err(|e| format!("Failed to read markdown file: {}", e))?;
+
+        // Parse markdown into slides
+        let slides = Self::parse_markdown(&md_content)?;
+
+        if slides.is_empty() {
+            return Err("No slides found in markdown file".to_string());
+        }
+
+        // Create output directory if needed
+        if let Some(parent) = PathBuf::from(output).parent() {
+            if !parent.as_os_str().is_empty() {
+                fs::create_dir_all(parent)
+                    .map_err(|e| format!("Failed to create directory: {}", e))?;
+            }
+        }
+
+        let title = title.unwrap_or("Presentation from Markdown");
+
+        // Generate PPTX with content
+        let pptx_data = generator::create_pptx_with_content(title, slides)
+            .map_err(|e| format!("Failed to generate PPTX: {}", e))?;
+
+        // Write to file
+        fs::write(output, pptx_data)
+            .map_err(|e| format!("Failed to write file: {}", e))?;
+
+        Ok(())
+    }
+
+    fn parse_markdown(content: &str) -> Result<Vec<SlideContent>, String> {
+        let mut slides = Vec::new();
+        let mut current_slide: Option<SlideContent> = None;
+
+        for line in content.lines() {
+            let trimmed = line.trim();
+
+            // Check for slide title (# heading)
+            if trimmed.starts_with("# ") {
+                // Save previous slide if exists
+                if let Some(slide) = current_slide.take() {
+                    slides.push(slide);
+                }
+
+                // Create new slide
+                let title = trimmed[2..].trim().to_string();
+                current_slide = Some(SlideContent::new(&title));
+            }
+            // Check for bullet points (- or * or +)
+            else if trimmed.starts_with("- ") || trimmed.starts_with("* ") || trimmed.starts_with("+ ") {
+                if let Some(ref mut slide) = current_slide {
+                    let bullet = trimmed[2..].trim().to_string();
+                    if !bullet.is_empty() {
+                        *slide = slide.clone().add_bullet(&bullet);
+                    }
+                } else {
+                    // Create a default slide if no title exists
+                    let bullet = trimmed[2..].trim().to_string();
+                    if !bullet.is_empty() {
+                        let mut slide = SlideContent::new("Slide");
+                        slide = slide.add_bullet(&bullet);
+                        current_slide = Some(slide);
+                    }
+                }
+            }
+            // Skip empty lines and other content
+        }
+
+        // Add last slide if exists
+        if let Some(slide) = current_slide {
+            slides.push(slide);
+        }
+
+        Ok(slides)
     }
 }
 

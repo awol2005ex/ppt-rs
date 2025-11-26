@@ -4,6 +4,7 @@
 #[derive(Debug, Clone)]
 pub enum Command {
     Create(CreateArgs),
+    FromMarkdown(FromMarkdownArgs),
     Info(InfoArgs),
     Help,
 }
@@ -14,6 +15,13 @@ pub struct CreateArgs {
     pub title: Option<String>,
     pub slides: usize,
     pub template: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FromMarkdownArgs {
+    pub input: String,
+    pub output: String,
+    pub title: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -31,6 +39,7 @@ impl Parser {
 
         match args[0].as_str() {
             "create" => Self::parse_create(&args[1..]),
+            "from-md" | "from-markdown" => Self::parse_from_markdown(&args[1..]),
             "info" => Self::parse_info(&args[1..]),
             "help" | "-h" | "--help" => Ok(Command::Help),
             cmd => Err(format!("Unknown command: {}", cmd)),
@@ -89,6 +98,39 @@ impl Parser {
         }))
     }
 
+    fn parse_from_markdown(args: &[String]) -> Result<Command, String> {
+        if args.len() < 2 {
+            return Err("from-md requires input and output files".to_string());
+        }
+
+        let input = args[0].clone();
+        let output = args[1].clone();
+        let mut title = None;
+
+        let mut i = 2;
+        while i < args.len() {
+            match args[i].as_str() {
+                "--title" => {
+                    if i + 1 < args.len() {
+                        title = Some(args[i + 1].clone());
+                        i += 2;
+                    } else {
+                        return Err("--title requires an argument".to_string());
+                    }
+                }
+                _ => {
+                    return Err(format!("Unknown option: {}", args[i]));
+                }
+            }
+        }
+
+        Ok(Command::FromMarkdown(FromMarkdownArgs {
+            input,
+            output,
+            title,
+        }))
+    }
+
     fn parse_info(args: &[String]) -> Result<Command, String> {
         if args.is_empty() {
             return Err("info requires a file path".to_string());
@@ -119,6 +161,26 @@ mod tests {
                 assert_eq!(create_args.title, Some("My Presentation".to_string()));
             }
             _ => panic!("Expected Create command"),
+        }
+    }
+
+    #[test]
+    fn test_parse_from_markdown() {
+        let args = vec![
+            "from-md".to_string(),
+            "input.md".to_string(),
+            "output.pptx".to_string(),
+            "--title".to_string(),
+            "From Markdown".to_string(),
+        ];
+        let cmd = Parser::parse(&args).unwrap();
+        match cmd {
+            Command::FromMarkdown(md_args) => {
+                assert_eq!(md_args.input, "input.md");
+                assert_eq!(md_args.output, "output.pptx");
+                assert_eq!(md_args.title, Some("From Markdown".to_string()));
+            }
+            _ => panic!("Expected FromMarkdown command"),
         }
     }
 

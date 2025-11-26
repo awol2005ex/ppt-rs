@@ -1,8 +1,6 @@
-# PPTX - Rust Port of python-pptx
+# PPTX-RS
 
 A Rust library for creating, reading, and updating PowerPoint 2007+ (.pptx) files.
-
-This is a comprehensive port of the popular [python-pptx](https://github.com/scanny/python-pptx) library to Rust, providing similar functionality with the performance and safety benefits of Rust.
 
 ## Features
 
@@ -13,10 +11,6 @@ This is a comprehensive port of the popular [python-pptx](https://github.com/sca
 - Support for charts, tables, and media
 - Full XML manipulation capabilities
 - Type-safe enumeration system
-
-## Project Status
-
-This is an active translation of all 101 Python files from python-pptx to Rust. The project is organized into logical modules that mirror the original Python package structure.
 
 ### Module Structure
 
@@ -123,13 +117,9 @@ The generated files are:
 
 See [ARCHITECTURE.md](ARCHITECTURE.md#pptx-generation-approach) for detailed technical documentation.
 
-## Translation Status
-
-See [TRANSLATION_PROGRESS.md](TRANSLATION_PROGRESS.md) for detailed progress on the translation of all 101 Python files.
-
 ## Architecture
 
-The library maintains the same logical architecture as python-pptx:
+The library follows a layered architecture:
 
 1. **API Layer** (`api.rs`) - User-facing functions
 2. **Package Layer** (`package.rs`) - ZIP file handling
@@ -150,14 +140,13 @@ The library maintains the same logical architecture as python-pptx:
 
 ## License
 
-MIT License - Same as python-pptx
+MIT License
 
 ## Contributing
 
-This is an active translation project. Contributions are welcome!
+Contributions are welcome! Please feel free to submit issues and pull requests.
 
 ## References
 
-- [python-pptx Documentation](https://python-pptx.readthedocs.io/)
 - [ECMA-376 Office Open XML Standard](http://www.ecma-international.org/publications/standards/Ecma-376.htm)
 - [Microsoft Office Open XML Formats](https://docs.microsoft.com/en-us/office/open-xml/open-xml-overview)

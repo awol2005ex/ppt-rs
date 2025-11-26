@@ -1,7 +1,6 @@
 //! PowerPoint (.pptx) file manipulation library
 //!
-//! This is a Rust port of the python-pptx library, providing functionality to create,
-//! read, and update PowerPoint 2007+ (.pptx) files.
+//! A comprehensive Rust library for creating, reading, and updating PowerPoint 2007+ (.pptx) files.
 //!
 //! # Core Modules
 //!

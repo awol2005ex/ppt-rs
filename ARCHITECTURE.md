@@ -341,16 +341,6 @@ let pptx_data = generator::create_pptx("My Presentation", 5)?;
 std::fs::write("presentation.pptx", pptx_data)?;
 ```
 
-## Translation Notes
-
-This is a port of python-pptx to Rust. Key differences:
-
-1. **Memory Management**: Rust's ownership system replaces Python's garbage collection
-2. **Type Safety**: Rust's type system provides compile-time guarantees
-3. **Error Handling**: Result types replace Python exceptions
-4. **Concurrency**: Rust's thread safety is built-in
-5. **Performance**: Rust provides better performance without sacrificing safety
-
 ## Future Enhancements
 
 - [ ] Complete OXML element implementations

@@ -1,6 +1,6 @@
 //! PPTX CLI - Command-line tool for creating PowerPoint presentations
 
-use pptx_rs::cli::{Parser, Command, CreateCommand, InfoCommand};
+use pptx_rs::cli::{Parser, Command, CreateCommand, FromMarkdownCommand, InfoCommand};
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -18,6 +18,20 @@ fn main() {
                     println!("✓ Created presentation: {}", create_args.output);
                     println!("  Title: {}", create_args.title.as_deref().unwrap_or("Presentation"));
                     println!("  Slides: {}", create_args.slides);
+                }
+                Err(e) => eprintln!("✗ Error: {}", e),
+            }
+        }
+        Ok(Command::FromMarkdown(md_args)) => {
+            match FromMarkdownCommand::execute(
+                &md_args.input,
+                &md_args.output,
+                md_args.title.as_deref(),
+            ) {
+                Ok(_) => {
+                    println!("✓ Created presentation from markdown: {}", md_args.output);
+                    println!("  Input: {}", md_args.input);
+                    println!("  Title: {}", md_args.title.as_deref().unwrap_or("Presentation from Markdown"));
                 }
                 Err(e) => eprintln!("✗ Error: {}", e),
             }
@@ -45,19 +59,42 @@ fn print_help() {
     println!("  pptx-cli <command> [options]");
     println!();
     println!("COMMANDS:");
-    println!("  create <file.pptx>    Create a new presentation");
-    println!("  info <file.pptx>      Show presentation information");
-    println!("  help                  Show this help message");
+    println!("  create <file.pptx>           Create a new presentation");
+    println!("  from-md <input.md> <output>  Generate PPTX from Markdown");
+    println!("  info <file.pptx>             Show presentation information");
+    println!("  help                         Show this help message");
     println!();
     println!("CREATE OPTIONS:");
     println!("  --title <text>        Set presentation title");
     println!("  --slides <count>      Number of slides to create (default: 1)");
     println!("  --template <file>     Use template file");
     println!();
+    println!("FROM-MD OPTIONS:");
+    println!("  --title <text>        Set presentation title (default: 'Presentation from Markdown')");
+    println!();
     println!("EXAMPLES:");
+    println!("  # Create a simple presentation");
     println!("  pptx-cli create my.pptx");
+    println!();
+    println!("  # Create with custom title and slides");
     println!("  pptx-cli create my.pptx --title 'My Presentation' --slides 5");
-    println!("  pptx-cli create output/demo.pptx --title 'Demo' --slides 10");
+    println!();
+    println!("  # Generate from Markdown");
+    println!("  pptx-cli from-md slides.md output.pptx");
+    println!();
+    println!("  # Generate from Markdown with custom title");
+    println!("  pptx-cli from-md slides.md output.pptx --title 'My Slides'");
+    println!();
+    println!("  # Show file information");
     println!("  pptx-cli info my.pptx");
+    println!();
+    println!("MARKDOWN FORMAT:");
+    println!("  # Slide Title");
+    println!("  - Bullet point 1");
+    println!("  - Bullet point 2");
+    println!();
+    println!("  # Another Slide");
+    println!("  - Point A");
+    println!("  - Point B");
     println!();
 }
