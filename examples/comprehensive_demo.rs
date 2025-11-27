@@ -1,145 +1,363 @@
 //! Comprehensive demonstration of all pptx-rs capabilities
+//!
+//! This example showcases:
+//! - Slide layouts (6 types)
+//! - Text formatting (bold, italic, underline, colors, sizes)
+//! - Tables with styling
+//! - Charts (bar, line, pie)
+//! - Images
+//! - Package reading/writing
 
-use pptx_rs::generator::{create_pptx_with_content, SlideContent};
+use pptx_rs::generator::{
+    create_pptx_with_content, SlideContent, SlideLayout,
+    Table, TableRow, TableCell, TableBuilder,
+    ChartType, ChartSeries, ChartBuilder,
+    ImageBuilder,
+    TextFormat,
+    Shape, ShapeType, ShapeFill,
+};
+use pptx_rs::opc::Package;
 use std::fs;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== PPTX-RS Comprehensive Demo ===\n");
+    println!("╔════════════════════════════════════════════════════════════╗");
+    println!("║           PPTX-RS Comprehensive Demo                       ║");
+    println!("╚════════════════════════════════════════════════════════════╝\n");
 
-    // Create slides demonstrating all features
-    let slides = vec![
-        // Slide 1: Title Slide
-        SlideContent::new("PPTX-RS Capabilities")
-            .add_bullet("Text formatting (bold, italic, underline, colors)")
-            .add_bullet("Tables with custom styling")
-            .add_bullet("Images with positioning")
-            .add_bullet("Charts (bar, line, pie)")
-            .add_bullet("Reading and inspecting PPTX files"),
-
-        // Slide 2: Text Formatting
-        SlideContent::new("Text Formatting Features")
-            .title_bold(true)
-            .title_italic(false)
-            .title_color("1F497D")
-            .add_bullet("Bold text support")
-            .add_bullet("Italic text support")
-            .add_bullet("Underline support")
-            .add_bullet("Custom colors (RGB hex)")
-            .add_bullet("Font size customization"),
-
-        // Slide 3: Tables - Quarterly Sales
-        SlideContent::new("Table Support: Quarterly Sales")
-            .with_table()
-            .add_bullet("Create tables with custom cells")
-            .add_bullet("Cell formatting: bold, background colors")
-            .add_bullet("Row height customization")
-            .add_bullet("Column width management")
-            .add_bullet("Q1: $100K | Q2: $150K | Q3: $180K | Q4: $220K"),
-
-        // Slide 4: Images
-        SlideContent::new("Image Embedding")
-            .with_image()
-            .add_bullet("Support for PNG, JPG, GIF formats")
-            .add_bullet("Custom positioning and sizing")
-            .add_bullet("Aspect ratio preservation")
-            .add_bullet("Automatic format detection")
-            .add_bullet("Proper ZIP package integration"),
-
-        // Slide 5: Charts - Bar Chart Data
-        SlideContent::new("Bar Charts: Regional Sales")
-            .with_chart()
-            .add_bullet("Q1: North=$45K, South=$38K, East=$52K, West=$41K")
-            .add_bullet("Q2: North=$52K, South=$42K, East=$58K, West=$48K")
-            .add_bullet("Q3: North=$58K, South=$45K, East=$62K, West=$52K")
-            .add_bullet("Multiple data series support")
-            .add_bullet("ECMA-376 compliant XML"),
-
-        // Slide 6: Charts - Line Chart Data
-        SlideContent::new("Line Charts: Revenue Trend")
-            .with_chart()
-            .add_bullet("Jan-Jun Revenue: $50K, $55K, $60K, $58K, $65K, $70K")
-            .add_bullet("Target: $55K, $55K, $60K, $60K, $65K, $70K")
-            .add_bullet("Line markers support")
-            .add_bullet("Multiple series visualization")
-            .add_bullet("Trend analysis ready"),
-
-        // Slide 7: Charts - Pie Chart Data
-        SlideContent::new("Pie Charts: Market Distribution")
-            .with_chart()
-            .add_bullet("Product A: 35%")
-            .add_bullet("Product B: 25%")
-            .add_bullet("Product C: 25%")
-            .add_bullet("Product D: 15%")
-            .add_bullet("Percentage display and category labels"),
-
-        // Slide 8: Package Management
-        SlideContent::new("Package Management")
-            .add_bullet("Read existing PPTX files")
-            .add_bullet("Write PPTX files")
-            .add_bullet("Part management (get, add, list)")
-            .add_bullet("ZIP archive handling")
-            .add_bullet("Foundation for modification"),
-
-        // Slide 9: Builder Pattern
-        SlideContent::new("Fluent Builder APIs")
-            .add_bullet("ChartBuilder - Create charts fluently")
-            .add_bullet("TableBuilder - Build tables step by step")
-            .add_bullet("ImageBuilder - Configure images")
-            .add_bullet("SlideContent - Build slide content")
-            .add_bullet("PresentationBuilder - Create presentations"),
-
-        // Slide 10: Summary
-        SlideContent::new("Summary & Next Steps")
-            .add_bullet("✓ Comprehensive PPTX generation")
-            .add_bullet("✓ Advanced content support")
-            .add_bullet("✓ Reading capabilities")
-            .add_bullet("→ XML parsing (in progress)")
-            .add_bullet("→ Slide modification (planned)"),
-    ];
-
-    // Generate the presentation
-    println!("Creating comprehensive demo presentation...");
-    let pptx_data = create_pptx_with_content("PPTX-RS Demo", slides)?;
-    fs::write("comprehensive_demo.pptx", pptx_data)?;
-    println!("✓ Created comprehensive_demo.pptx\n");
-
-    // Demonstrate reading capability
-    println!("Reading the generated PPTX file...");
-    use pptx_rs::opc::package::Package;
+    // =========================================================================
+    // PART 1: Slide Layouts
+    // =========================================================================
+    println!("📐 Part 1: Slide Layouts");
     
-    match Package::open("comprehensive_demo.pptx") {
-        Ok(package) => {
-            println!("Package Statistics:");
-            println!("  Total parts: {}", package.part_count());
-            
-            let paths = package.part_paths();
-            let slide_count = paths.iter().filter(|p| p.starts_with("ppt/slides/slide") && p.ends_with(".xml")).count();
-            println!("  Slides: {}", slide_count);
-            
-            if let Some(core) = package.get_part("docProps/core.xml") {
-                println!("  Core properties: {} bytes", core.len());
-            }
-            
-            println!("\nPackage Contents Summary:");
-            println!("  Slide files: {}", paths.iter().filter(|p| p.contains("/slides/slide")).count());
-            println!("  Relationship files: {}", paths.iter().filter(|p| p.contains(".rels")).count());
-            println!("  XML files: {}", paths.iter().filter(|p| p.ends_with(".xml")).count());
-        }
-        Err(e) => {
-            println!("Note: Could not read PPTX file: {} (this is expected for complex presentations)", e);
+    let layout_slides = vec![
+        // Cover slide with centered title
+        SlideContent::new("PPTX-RS Library Demo")
+            .layout(SlideLayout::CenteredTitle)
+            .title_size(54)
+            .title_bold(true)
+            .title_color("1F497D"),
+        
+        // Title only layout
+        SlideContent::new("Section: Slide Layouts")
+            .layout(SlideLayout::TitleOnly)
+            .title_color("C0504D"),
+        
+        // Standard title and content
+        SlideContent::new("Available Layouts")
+            .layout(SlideLayout::TitleAndContent)
+            .add_bullet("CenteredTitle - Cover slides")
+            .add_bullet("TitleOnly - Section headers")
+            .add_bullet("TitleAndContent - Standard slides")
+            .add_bullet("TitleAndBigContent - More content space")
+            .add_bullet("TwoColumn - Side-by-side comparison")
+            .add_bullet("Blank - Custom content"),
+        
+        // Two column layout
+        SlideContent::new("Comparison View")
+            .layout(SlideLayout::TwoColumn)
+            .add_bullet("Left: Feature A")
+            .add_bullet("Left: Feature B")
+            .add_bullet("Left: Feature C")
+            .add_bullet("Right: Benefit A")
+            .add_bullet("Right: Benefit B")
+            .add_bullet("Right: Benefit C"),
+    ];
+    println!("   ✓ Created {} layout demo slides", layout_slides.len());
+
+    // =========================================================================
+    // PART 2: Text Formatting
+    // =========================================================================
+    println!("📝 Part 2: Text Formatting");
+    
+    // Demonstrate TextFormat API
+    let bold_format = TextFormat::new().bold();
+    let italic_format = TextFormat::new().italic();
+    let colored_format = TextFormat::new().color("FF0000");
+    let combined_format = TextFormat::new()
+        .bold()
+        .italic()
+        .underline()
+        .color("0000FF")
+        .font_size(32);
+    
+    println!("   ✓ Bold format: {:?}", bold_format);
+    println!("   ✓ Italic format: {:?}", italic_format);
+    println!("   ✓ Colored format: {:?}", colored_format);
+    println!("   ✓ Combined format: {:?}", combined_format);
+    
+    let text_slides = vec![
+        SlideContent::new("Text Formatting Demo")
+            .title_bold(true)
+            .title_color("4F81BD")
+            .title_size(44)
+            .add_bullet("Bold titles with custom colors")
+            .add_bullet("Italic content support")
+            .add_bullet("Underline emphasis")
+            .add_bullet("Font sizes from 8pt to 96pt")
+            .content_size(24)
+            .content_color("333333"),
+        
+        SlideContent::new("Color Palette")
+            .title_color("9BBB59")
+            .add_bullet("Primary: #1F497D (Blue)")
+            .add_bullet("Accent 1: #4F81BD (Light Blue)")
+            .add_bullet("Accent 2: #C0504D (Red)")
+            .add_bullet("Accent 3: #9BBB59 (Green)")
+            .add_bullet("Accent 4: #8064A2 (Purple)"),
+    ];
+    println!("   ✓ Created {} text formatting slides", text_slides.len());
+
+    // =========================================================================
+    // PART 3: Tables
+    // =========================================================================
+    println!("📊 Part 3: Tables");
+    
+    // Define column widths (in EMU - 914400 EMU = 1 inch)
+    let col_widths = vec![1500000, 1500000, 1500000]; // 3 columns
+    
+    // Create a sales table using TableBuilder
+    let sales_table = TableBuilder::new(col_widths.clone())
+        .add_row(TableRow::new(vec![
+            TableCell::new("Quarter").bold().background_color("4F81BD"),
+            TableCell::new("Revenue").bold().background_color("4F81BD"),
+            TableCell::new("Growth").bold().background_color("4F81BD"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Q1 2024"),
+            TableCell::new("$1.2M"),
+            TableCell::new("+15%"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Q2 2024"),
+            TableCell::new("$1.5M"),
+            TableCell::new("+25%"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Q3 2024"),
+            TableCell::new("$1.8M"),
+            TableCell::new("+20%"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Q4 2024").bold(),
+            TableCell::new("$2.2M").bold(),
+            TableCell::new("+22%").bold().background_color("9BBB59"),
+        ]))
+        .build();
+    
+    println!("   ✓ Created sales table: {} rows x {} cols", 
+             sales_table.rows.len(), 
+             sales_table.rows.first().map(|r| r.cells.len()).unwrap_or(0));
+    
+    // Create table from 2D data
+    let data = vec![
+        vec!["Product", "Units", "Price"],
+        vec!["Widget A", "1,500", "$29.99"],
+        vec!["Widget B", "2,300", "$19.99"],
+        vec!["Widget C", "890", "$49.99"],
+    ];
+    let product_table = Table::from_data(data, col_widths.clone(), 457200, 1600200);
+    println!("   ✓ Created product table from data: {} rows", product_table.rows.len());
+    
+    let table_slides = vec![
+        SlideContent::new("Quarterly Revenue")
+            .table(sales_table)
+            .title_color("1F497D"),
+        
+        SlideContent::new("Product Inventory")
+            .add_bullet("Widget A: 1,500 units @ $29.99")
+            .add_bullet("Widget B: 2,300 units @ $19.99")
+            .add_bullet("Widget C: 890 units @ $49.99")
+            .with_table(),
+    ];
+    println!("   ✓ Created {} table slides", table_slides.len());
+
+    // =========================================================================
+    // PART 4: Charts
+    // =========================================================================
+    println!("📈 Part 4: Charts");
+    
+    // Bar Chart
+    let bar_chart = ChartBuilder::new("Regional Sales", ChartType::Bar)
+        .categories(vec!["North", "South", "East", "West"])
+        .add_series(ChartSeries::new("Q1", vec![45.0, 38.0, 52.0, 41.0]))
+        .add_series(ChartSeries::new("Q2", vec![52.0, 42.0, 58.0, 48.0]))
+        .build();
+    println!("   ✓ Created bar chart: {} series", bar_chart.series.len());
+    
+    // Line Chart
+    let line_chart = ChartBuilder::new("Monthly Trend", ChartType::Line)
+        .categories(vec!["Jan", "Feb", "Mar", "Apr", "May", "Jun"])
+        .add_series(ChartSeries::new("Revenue", vec![50.0, 55.0, 60.0, 58.0, 65.0, 70.0]))
+        .add_series(ChartSeries::new("Target", vec![55.0, 55.0, 60.0, 60.0, 65.0, 70.0]))
+        .build();
+    println!("   ✓ Created line chart: {} data points", 
+             line_chart.series.first().map(|s| s.values.len()).unwrap_or(0));
+    
+    // Pie Chart
+    let pie_chart = ChartBuilder::new("Market Share", ChartType::Pie)
+        .categories(vec!["Product A", "Product B", "Product C", "Product D"])
+        .add_series(ChartSeries::new("Share", vec![35.0, 25.0, 25.0, 15.0]))
+        .build();
+    println!("   ✓ Created pie chart: {} slices", 
+             pie_chart.series.first().map(|s| s.values.len()).unwrap_or(0));
+    
+    let chart_slides = vec![
+        SlideContent::new("Bar Chart: Regional Sales")
+            .with_chart()
+            .add_bullet("North: Strong Q2 growth (+15%)")
+            .add_bullet("East: Highest performer")
+            .add_bullet("South: Steady improvement")
+            .add_bullet("West: Consistent growth"),
+        
+        SlideContent::new("Line Chart: Revenue Trend")
+            .with_chart()
+            .add_bullet("6-month upward trend")
+            .add_bullet("Exceeded targets in May-Jun")
+            .add_bullet("40% growth Jan to Jun"),
+        
+        SlideContent::new("Pie Chart: Market Share")
+            .with_chart()
+            .add_bullet("Product A leads with 35%")
+            .add_bullet("Products B & C tied at 25%")
+            .add_bullet("Product D: Growth opportunity"),
+    ];
+    println!("   ✓ Created {} chart slides", chart_slides.len());
+
+    // =========================================================================
+    // PART 5: Images
+    // =========================================================================
+    println!("🖼️  Part 5: Images");
+    
+    // Create image configurations (width/height in EMU)
+    let logo_image = ImageBuilder::new("logo.png", 2000000, 1000000)
+        .position(100000, 100000)
+        .build();
+    println!("   ✓ Logo image: {}x{} at ({}, {})", 
+             logo_image.width, logo_image.height, logo_image.x, logo_image.y);
+    
+    let photo_image = ImageBuilder::new("photo.jpg", 4000000, 3000000)
+        .position(300000, 200000)
+        .build()
+        .scale_to_width(4000000);
+    println!("   ✓ Photo image: scaled to width {}", photo_image.width);
+    
+    let image_slides = vec![
+        SlideContent::new("Image Support")
+            .with_image()
+            .add_bullet("PNG, JPG, GIF, BMP, TIFF formats")
+            .add_bullet("Custom positioning (x, y)")
+            .add_bullet("Flexible sizing (width, height)")
+            .add_bullet("Scale to width/height")
+            .add_bullet("Aspect ratio preservation"),
+    ];
+    println!("   ✓ Created {} image slides", image_slides.len());
+
+    // =========================================================================
+    // PART 6: Shapes
+    // =========================================================================
+    println!("🔷 Part 6: Shapes");
+    
+    // Create shapes with proper EMU dimensions
+    let rectangle = Shape::new(ShapeType::Rectangle, 100000, 100000, 2000000, 1000000)
+        .with_fill(ShapeFill::new("4F81BD"))
+        .with_text("Rectangle");
+    println!("   ✓ Rectangle shape: {:?}", rectangle.shape_type);
+    
+    let circle = Shape::new(ShapeType::Circle, 3500000, 100000, 1500000, 1500000)
+        .with_fill(ShapeFill::new("C0504D"));
+    println!("   ✓ Circle shape: {:?}", circle.shape_type);
+    
+    let shape_slides = vec![
+        SlideContent::new("Shape Support")
+            .add_bullet("Rectangle, Circle, Triangle")
+            .add_bullet("Diamond, Arrow, Star, Hexagon")
+            .add_bullet("Solid color fills with transparency")
+            .add_bullet("Border/line styling")
+            .add_bullet("Text inside shapes"),
+    ];
+    println!("   ✓ Created {} shape slides", shape_slides.len());
+
+    // =========================================================================
+    // Combine all slides
+    // =========================================================================
+    let mut all_slides = Vec::new();
+    all_slides.extend(layout_slides);
+    all_slides.extend(text_slides);
+    all_slides.extend(table_slides);
+    all_slides.extend(chart_slides);
+    all_slides.extend(image_slides);
+    all_slides.extend(shape_slides);
+    
+    // Add summary slide
+    all_slides.push(
+        SlideContent::new("Summary")
+            .layout(SlideLayout::TitleAndBigContent)
+            .title_color("1F497D")
+            .add_bullet("✓ 6 Slide Layouts")
+            .add_bullet("✓ Rich Text Formatting")
+            .add_bullet("✓ Tables with Styling")
+            .add_bullet("✓ Charts (Bar, Line, Pie)")
+            .add_bullet("✓ Image Embedding")
+            .add_bullet("✓ Shape Drawing")
+            .content_bold(true)
+    );
+
+    // =========================================================================
+    // Generate PPTX
+    // =========================================================================
+    println!("\n📦 Generating PPTX...");
+    let pptx_data = create_pptx_with_content("PPTX-RS Demo", all_slides.clone())?;
+    fs::write("comprehensive_demo.pptx", &pptx_data)?;
+    println!("   ✓ Created comprehensive_demo.pptx ({} slides, {} bytes)", 
+             all_slides.len(), pptx_data.len());
+
+    // =========================================================================
+    // PART 7: Package Reading
+    // =========================================================================
+    println!("\n📖 Part 7: Package Reading");
+    
+    let package = Package::open("comprehensive_demo.pptx")?;
+    let paths = package.part_paths();
+    
+    println!("   Package contents:");
+    println!("   ├── Total parts: {}", package.part_count());
+    println!("   ├── Slides: {}", paths.iter()
+        .filter(|p| p.starts_with("ppt/slides/slide") && p.ends_with(".xml"))
+        .count());
+    println!("   ├── Relationships: {}", paths.iter()
+        .filter(|p| p.contains(".rels"))
+        .count());
+    println!("   └── XML files: {}", paths.iter()
+        .filter(|p| p.ends_with(".xml"))
+        .count());
+    
+    // Show some part contents
+    if let Some(core) = package.get_part("docProps/core.xml") {
+        let content = String::from_utf8_lossy(core);
+        if content.contains("<dc:title>") {
+            println!("\n   Core properties found:");
+            println!("   └── Title: PPTX-RS Demo");
         }
     }
-    
-    println!("\n=== Demo Complete ===");
-    println!("\nFeatures Demonstrated:");
-    println!("  ✓ Text formatting with colors");
-    println!("  ✓ Slide content with bullets");
-    println!("  ✓ Table data (Quarterly Sales)");
-    println!("  ✓ Chart data (Bar, Line, Pie)");
-    println!("  ✓ Image support");
-    println!("  ✓ PPTX reading and inspection");
-    println!("\nGenerated file: comprehensive_demo.pptx");
-    println!("Open in PowerPoint, LibreOffice, or Google Slides to view.");
+
+    // =========================================================================
+    // Summary
+    // =========================================================================
+    println!("\n╔════════════════════════════════════════════════════════════╗");
+    println!("║                    Demo Complete                           ║");
+    println!("╠════════════════════════════════════════════════════════════╣");
+    println!("║  Features Demonstrated:                                    ║");
+    println!("║  ✓ Slide Layouts (6 types)                                 ║");
+    println!("║  ✓ Text Formatting (bold, italic, underline, colors)       ║");
+    println!("║  ✓ Tables (TableBuilder, from_data)                        ║");
+    println!("║  ✓ Charts (Bar, Line, Pie with ChartBuilder)               ║");
+    println!("║  ✓ Images (ImageBuilder with positioning)                  ║");
+    println!("║  ✓ Shapes (Rectangle, Ellipse, etc.)                       ║");
+    println!("║  ✓ Package Reading (open, get_part, part_paths)            ║");
+    println!("╠════════════════════════════════════════════════════════════╣");
+    println!("║  Output: comprehensive_demo.pptx                           ║");
+    println!("║  Open in PowerPoint, LibreOffice, or Google Slides         ║");
+    println!("╚════════════════════════════════════════════════════════════╝");
 
     Ok(())
 }
