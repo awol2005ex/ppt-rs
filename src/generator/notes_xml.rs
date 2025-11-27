@@ -2,9 +2,17 @@
 
 use crate::core::escape_xml;
 
+/// Generate a proper GUID for field IDs
+/// Format: {XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}
+fn generate_field_guid(slide_num: usize) -> String {
+    // Generate a deterministic but valid-looking GUID based on slide number
+    format!("{{B0E4A5D7-2C3F-4A8B-9E1D-{:012X}}}", slide_num)
+}
+
 /// Generate notes slide XML for speaker notes
 pub fn create_notes_xml(slide_num: usize, notes_text: &str) -> String {
     let escaped_notes = escape_xml(notes_text);
+    let field_guid = generate_field_guid(slide_num);
     
     format!(r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:notes xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
@@ -72,7 +80,7 @@ pub fn create_notes_xml(slide_num: usize, notes_text: &str) -> String {
 <a:bodyPr/>
 <a:lstStyle/>
 <a:p>
-<a:fld id="{{slide-num-{slide_num}}}" type="slidenum">
+<a:fld id="{field_guid}" type="slidenum">
 <a:rPr lang="en-US"/>
 <a:t>{slide_num}</a:t>
 </a:fld>
