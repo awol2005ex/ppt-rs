@@ -8,6 +8,8 @@ pub mod tables;
 pub mod tables_xml;
 pub mod images;
 pub mod images_xml;
+pub mod charts;
+pub mod charts_xml;
 
 pub use builder::{create_pptx, create_pptx_with_content};
 pub use xml::SlideContent;
@@ -16,6 +18,8 @@ pub use shapes::{Shape, ShapeType, ShapeFill, ShapeLine};
 pub use tables::{Table, TableRow, TableCell, TableBuilder};
 pub use images::{Image, ImageBuilder};
 pub use images_xml::{generate_image_xml, generate_image_relationship, generate_image_content_type};
+pub use charts::{Chart, ChartType, ChartSeries, ChartBuilder};
+pub use charts_xml::generate_chart_xml;
 
 #[cfg(test)]
 mod tests {

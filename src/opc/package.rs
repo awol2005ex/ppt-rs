@@ -2,32 +2,129 @@
 
 use std::io::Read;
 use std::path::Path;
+use std::collections::HashMap;
 use crate::exc::Result;
 
 /// Represents an OPC package (ZIP file)
 pub struct Package {
-    // Package implementation will be added
+    /// Package parts stored as (path, content)
+    parts: HashMap<String, Vec<u8>>,
 }
 
 impl Package {
+    /// Create a new empty package
+    pub fn new() -> Self {
+        Package {
+            parts: HashMap::new(),
+        }
+    }
+
     /// Open a package from a file path
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let _path = path.as_ref();
-        // TODO: Implement ZIP file reading
-        Ok(Package {})
+        let path = path.as_ref();
+        let file = std::fs::File::open(path)?;
+        Self::open_reader(file)
     }
 
     /// Open a package from a reader
-    pub fn open_reader<R: Read>(reader: R) -> Result<Self> {
-        let _reader = reader;
-        // TODO: Implement ZIP file reading from reader
-        Ok(Package {})
+    pub fn open_reader<R: Read + std::io::Seek>(reader: R) -> Result<Self> {
+        let mut archive = zip::ZipArchive::new(reader)
+            .map_err(|e| crate::exc::PptxError::Zip(e.to_string()))?;
+
+        let mut parts = HashMap::new();
+
+        for i in 0..archive.len() {
+            let mut file = archive
+                .by_index(i)
+                .map_err(|e| crate::exc::PptxError::Zip(e.to_string()))?;
+
+            if !file.is_dir() {
+                let mut content = Vec::new();
+                file.read_to_end(&mut content)?;
+                parts.insert(file.name().to_string(), content);
+            }
+        }
+
+        Ok(Package { parts })
     }
 
     /// Save the package to a file
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        let _path = path.as_ref();
-        // TODO: Implement ZIP file writing
+        let path = path.as_ref();
+        let file = std::fs::File::create(path)?;
+        self.save_writer(file)
+    }
+
+    /// Save the package to a writer
+    pub fn save_writer<W: std::io::Write + std::io::Seek>(&self, writer: W) -> Result<()> {
+        let mut archive = zip::ZipWriter::new(writer);
+
+        for (path, content) in &self.parts {
+            let options = zip::write::FileOptions::default();
+            archive
+                .start_file(path, options)
+                .map_err(|e| crate::exc::PptxError::Zip(e.to_string()))?;
+            std::io::Write::write_all(&mut archive, content)?;
+        }
+
+        archive
+            .finish()
+            .map_err(|e| crate::exc::PptxError::Zip(e.to_string()))?;
+
         Ok(())
+    }
+
+    /// Get a part by path
+    pub fn get_part(&self, path: &str) -> Option<&[u8]> {
+        self.parts.get(path).map(|v| v.as_slice())
+    }
+
+    /// Add or update a part
+    pub fn add_part(&mut self, path: String, content: Vec<u8>) {
+        self.parts.insert(path, content);
+    }
+
+    /// Get all part paths
+    pub fn part_paths(&self) -> Vec<&str> {
+        self.parts.keys().map(|s| s.as_str()).collect()
+    }
+
+    /// Get number of parts
+    pub fn part_count(&self) -> usize {
+        self.parts.len()
+    }
+}
+
+impl Default for Package {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_package_creation() {
+        let package = Package::new();
+        assert_eq!(package.part_count(), 0);
+    }
+
+    #[test]
+    fn test_add_part() {
+        let mut package = Package::new();
+        package.add_part("test.txt".to_string(), b"content".to_vec());
+        assert_eq!(package.part_count(), 1);
+        assert_eq!(package.get_part("test.txt"), Some(b"content".as_slice()));
+    }
+
+    #[test]
+    fn test_part_paths() {
+        let mut package = Package::new();
+        package.add_part("file1.txt".to_string(), b"content1".to_vec());
+        package.add_part("file2.txt".to_string(), b"content2".to_vec());
+        let paths = package.part_paths();
+        assert_eq!(paths.len(), 2);
     }
 }

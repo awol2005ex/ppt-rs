@@ -100,6 +100,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+#### Creating Charts
+
+```rust
+use pptx_rs::generator::{ChartBuilder, ChartType, ChartSeries};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a bar chart
+    let chart = ChartBuilder::new("Sales by Quarter", ChartType::Bar)
+        .categories(vec!["Q1", "Q2", "Q3", "Q4"])
+        .add_series(ChartSeries::new("2023", vec![100.0, 150.0, 120.0, 200.0]))
+        .add_series(ChartSeries::new("2024", vec![120.0, 180.0, 160.0, 240.0]))
+        .position(500000, 1500000)
+        .size(5000000, 3500000)
+        .build();
+    
+    // Chart is ready to be integrated into slides
+    Ok(())
+}
+```
+
+#### Reading PPTX Files
+
+```rust
+use pptx_rs::opc::package::Package;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Open an existing PPTX file
+    let package = Package::open("presentation.pptx")?;
+    
+    // Inspect package contents
+    println!("Total parts: {}", package.part_count());
+    
+    // Get specific parts
+    if let Some(content) = package.get_part("ppt/presentation.xml") {
+        println!("Presentation XML: {} bytes", content.len());
+    }
+    
+    // List all parts
+    for path in package.part_paths() {
+        println!("Part: {}", path);
+    }
+    
+    Ok(())
+}
+```
+
 ### PPTX Generation Approach
 
 The library generates proper Microsoft PowerPoint 2007+ (.pptx) files by:
