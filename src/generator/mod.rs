@@ -1,7 +1,17 @@
 //! PPTX file generator - creates proper ZIP-based PPTX files
 
-pub mod builder;
+// Core XML generation modules
+pub mod slide_content;
+pub mod package_xml;
+pub mod slide_xml;
+pub mod theme_xml;
+pub mod props_xml;
+
+// Re-export module for backward compatibility
 pub mod xml;
+
+// Builder and content modules
+pub mod builder;
 pub mod text;
 pub mod shapes;
 pub mod tables;

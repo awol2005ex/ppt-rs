@@ -10,7 +10,13 @@
 - [x] Removed deprecated stub modules, simplified `lib.rs`
 - [x] Implemented `api::Presentation` with builder pattern
 - [x] Re-exported all major types from lib.rs for convenience
-- [x] All 196 tests passing
+- [x] Modularized `generator/xml.rs` (1135 lines → 5 modules):
+  - `slide_content.rs` (160 lines) - SlideLayout, SlideContent
+  - `package_xml.rs` (85 lines) - content types, relationships
+  - `slide_xml.rs` (718 lines) - slide layout XML generation
+  - `theme_xml.rs` (137 lines) - theme, master, layout XML
+  - `props_xml.rs` (42 lines) - document properties
+- [x] All tests passing
 
 ## Completed
 
