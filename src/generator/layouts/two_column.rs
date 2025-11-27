@@ -35,7 +35,7 @@ impl TwoColumnLayout {
             .add_title(2, 457200, 274638, 8230200, 914400, &content.title, &title_props, "title");
 
         if !content.content.is_empty() {
-            let mid = (content.content.len() + 1) / 2;
+            let mid = content.content.len().div_ceil(2);
             let left_content = &content.content[..mid];
             let right_content = &content.content[mid..];
 

@@ -83,3 +83,76 @@ pub fn create_presentation_xml(_title: &str, slides: usize) -> String {
 </p:presentation>"#);
     xml
 }
+
+/// Create [Content_Types].xml with notes support
+pub fn create_content_types_xml_with_notes(slides: usize, custom_slides: Option<&Vec<super::slide_content::SlideContent>>) -> String {
+    let mut xml = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>"#.to_string();
+
+    for i in 1..=slides {
+        xml.push_str(&format!(
+            "\n<Override PartName=\"/ppt/slides/slide{i}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.slide+xml\"/>"
+        ));
+    }
+
+    // Add notes content types
+    if let Some(slides_vec) = custom_slides {
+        for (i, slide) in slides_vec.iter().enumerate() {
+            if slide.notes.is_some() {
+                let slide_num = i + 1;
+                xml.push_str(&format!(
+                    "\n<Override PartName=\"/ppt/notesSlides/notesSlide{slide_num}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.notesSlide+xml\"/>"
+                ));
+            }
+        }
+        // Add notes master if any slide has notes
+        if slides_vec.iter().any(|s| s.notes.is_some()) {
+            xml.push_str("\n<Override PartName=\"/ppt/notesMasters/notesMaster1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.notesMaster+xml\"/>");
+        }
+    }
+
+    xml.push_str(r#"
+<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>
+<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>
+<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>
+<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+</Types>"#);
+    xml
+}
+
+/// Create ppt/_rels/presentation.xml.rels with notes master
+pub fn create_presentation_rels_xml_with_notes(slides: usize) -> String {
+    let mut xml = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+    <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster" Target="slideMasters/slideMaster1.xml"/>
+    <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>"#.to_string();
+
+    for i in 1..=slides {
+        let rid = i + 2;
+        xml.push_str(&format!(
+            "\n    <Relationship Id=\"rId{rid}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide\" Target=\"slides/slide{i}.xml\"/>"
+        ));
+    }
+
+    // Add notes master relationship
+    let notes_master_rid = slides + 3;
+    xml.push_str(&format!(
+        "\n    <Relationship Id=\"rId{notes_master_rid}\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesMaster\" Target=\"notesMasters/notesMaster1.xml\"/>"
+    ));
+
+    xml.push_str("\n</Relationships>");
+    xml
+}
+
+/// Create slide relationship XML with notes reference
+pub fn create_slide_rels_xml_with_notes(slide_num: usize) -> String {
+    format!(r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="../notesSlides/notesSlide{slide_num}.xml"/>
+</Relationships>"#)
+}

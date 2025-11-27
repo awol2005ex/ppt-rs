@@ -56,6 +56,8 @@ pub struct SlideContent {
     pub table: Option<Table>,
     pub shapes: Vec<Shape>,
     pub images: Vec<Image>,
+    /// Speaker notes for the slide
+    pub notes: Option<String>,
 }
 
 impl SlideContent {
@@ -80,6 +82,7 @@ impl SlideContent {
             table: None,
             shapes: Vec::new(),
             images: Vec::new(),
+            notes: None,
         }
     }
 
@@ -188,5 +191,16 @@ impl SlideContent {
         self.images.extend(images);
         self.has_image = true;
         self
+    }
+
+    /// Add speaker notes to the slide
+    pub fn notes(mut self, notes: &str) -> Self {
+        self.notes = Some(notes.to_string());
+        self
+    }
+
+    /// Check if slide has speaker notes
+    pub fn has_notes(&self) -> bool {
+        self.notes.is_some()
     }
 }

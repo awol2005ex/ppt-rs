@@ -2,6 +2,23 @@
 
 ## Recently Completed
 
+### Speaker Notes Support (v1.0.6)
+- [x] Added `notes` field to `SlideContent` struct
+- [x] Added `.notes()` builder method for adding speaker notes
+- [x] Created `notes_xml.rs` - Notes XML generation
+- [x] Created notes master XML and relationships
+- [x] Updated content types for notes slides
+- [x] Updated slide relationships for notes references
+- [x] All 376 tests passing
+
+### Unit Test Coverage (v1.0.5)
+- [x] Added comprehensive tests for `util.rs` - Length conversions (14 tests)
+- [x] Added comprehensive tests for `opc/packuri.rs` - PackUri operations (12 tests)
+- [x] Added comprehensive tests for `oxml/ns.rs` - Namespace handling (10 tests)
+- [x] Added comprehensive tests for `enums/base.rs` - Enum types (14 tests)
+- [x] Enhanced `comprehensive_demo.rs` - 32-slide business presentation
+- [x] All 371 tests passing
+
 ### Code Modularization (v1.0.4)
 - [x] Modularized `generator/layouts/` - Atomic slide layout generators
   - `common.rs` - SlideXmlBuilder, generate_text_props
@@ -221,51 +238,55 @@
 
 ## Lower Priority
 
-### 7. Chart Implementation
-- [ ] `chart/chart.rs` - Chart
-- [ ] `chart/axis.rs` - Axis
-- [ ] `chart/series.rs` - Series
-- [ ] `chart/plot.rs` - Plot
-- [ ] `chart/data.py` - Chart data
-- [ ] Implement chart factory
+### 7. Chart Implementation ✓
+- [x] `generator/charts/` - Chart generation (builder, data, types, xml)
+- [x] `oxml/chart/mod.rs` - Chart OXML parsing (386 lines)
+- [x] Bar, Line, Pie chart types
+- [x] ChartBuilder with fluent API
+- [x] Multiple series support
 
-### 8. DML Implementation
-- [ ] `dml/color.rs` - Color handling
-- [ ] `dml/fill.rs` - Fill handling
-- [ ] `dml/line.rs` - Line handling
-- [ ] `dml/effect.rs` - Effects
+### 8. DML Implementation ✓
+- [x] `oxml/dml/mod.rs` - DML OXML parsing (352 lines)
+- [x] Color handling (RGB, scheme colors)
+- [x] Fill handling (solid, gradient, pattern)
+- [x] Outline/line handling
+- [x] Effects (extent, shadow basics)
 
-### 9. Table Implementation
-- [ ] `table.rs` - Table
-- [ ] Implement table cells
-- [ ] Implement table rows/columns
+### 9. Table Implementation ✓
+- [x] `generator/tables.rs` - Table generation
+- [x] `oxml/table.rs` - Table OXML parsing (304 lines)
+- [x] TableBuilder with fluent API
+- [x] Cell formatting (bold, colors)
+- [x] Row/column management
 
 ### 10. Media & Themes
-- [ ] `media.rs` - Media handling
-- [ ] `oxml/theme.rs` - Theme elements
-- [ ] Implement theme support
+- [x] `generator/images.rs` - Image handling
+- [x] `generator/theme_xml.rs` - Theme XML generation
+- [ ] Advanced theme customization
+- [ ] Embedded fonts support
 
-## Testing
+## Testing ✓
 
-### Unit Tests
-- [ ] Test Length conversions in `util.rs`
-- [ ] Test PackUri operations in `opc/packuri.rs`
-- [ ] Test enum values in `enums/`
-- [ ] Test namespace handling in `oxml/ns.rs`
+### Unit Tests ✓
+- [x] Test Length conversions in `util.rs` (14 tests)
+- [x] Test PackUri operations in `opc/packuri.rs` (12 tests)
+- [x] Test enum values in `enums/base.rs` (14 tests)
+- [x] Test namespace handling in `oxml/ns.rs` (10 tests)
 
-### Integration Tests
-- [ ] Test creating a presentation
-- [ ] Test opening a presentation
-- [ ] Test adding slides
-- [ ] Test adding shapes
-- [ ] Test adding text
-- [ ] Test saving presentations
+### Integration Tests ✓
+- [x] Test creating a presentation (comprehensive_demo.rs)
+- [x] Test opening a presentation (read_pptx.rs)
+- [x] Test adding slides (all examples)
+- [x] Test adding shapes (shapes_demo.rs)
+- [x] Test adding text (text_formatting.rs)
+- [x] Test saving presentations (all examples)
 
-### Example Programs
-- [ ] Create simple presentation example
-- [ ] Create presentation with shapes example
-- [ ] Create presentation with text example
-- [ ] Create presentation with images example
+### Example Programs ✓
+- [x] `comprehensive_demo.rs` - 32-slide business presentation
+- [x] `shapes_demo.rs` - Shape showcase
+- [x] `text_formatting.rs` - Text formatting demo
+- [x] `chart_generation.rs` - Chart examples
+- [x] `read_pptx.rs` - Reading PPTX files
 
 ## Documentation
 
@@ -282,7 +303,8 @@
 
 ## Code Quality
 
-- [ ] Fix remaining clippy warnings
+- [x] Fixed div_ceil clippy warnings
+- [ ] Fix format string style warnings (121 remaining - cosmetic)
 - [ ] Improve error messages
 - [ ] Add more comprehensive error handling
 - [ ] Review and refactor large functions
@@ -298,7 +320,7 @@
 
 - [ ] Animation support
 - [ ] Master slide support
-- [ ] Notes page support
+- [x] Notes page support (v1.0.6)
 - [ ] Handout master support
 - [ ] Custom XML support
 - [ ] VBA macro support

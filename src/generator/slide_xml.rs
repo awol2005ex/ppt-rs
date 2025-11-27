@@ -478,7 +478,7 @@ fn create_two_column_slide(content: &SlideContent) -> String {
             content.content_color.as_deref(),
         );
 
-        let mid = (content.content.len() + 1) / 2;
+        let mid = content.content.len().div_ceil(2);
         let left_content = &content.content[..mid];
         let right_content = &content.content[mid..];
 

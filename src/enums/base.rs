@@ -103,3 +103,137 @@ impl Default for EnumRegistry {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_base_enum_creation() {
+        let e = BaseEnum::new("TEST", 1, "Test enum");
+        assert_eq!(e.name, "TEST");
+        assert_eq!(e.value, 1);
+        assert_eq!(e.doc, "Test enum");
+    }
+
+    #[test]
+    fn test_base_enum_display() {
+        let e = BaseEnum::new("TEST", 42, "Test");
+        assert_eq!(format!("{}", e), "TEST (42)");
+    }
+
+    #[test]
+    fn test_base_enum_equality() {
+        let e1 = BaseEnum::new("TEST", 1, "Test");
+        let e2 = BaseEnum::new("TEST", 1, "Test");
+        let e3 = BaseEnum::new("OTHER", 2, "Other");
+        assert_eq!(e1, e2);
+        assert_ne!(e1, e3);
+    }
+
+    #[test]
+    fn test_base_enum_clone() {
+        let e1 = BaseEnum::new("TEST", 1, "Test");
+        let e2 = e1;
+        assert_eq!(e1, e2);
+    }
+
+    #[test]
+    fn test_base_xml_enum_creation() {
+        let e = BaseXmlEnum::new("CENTER", 1, Some("ctr"), "Center alignment");
+        assert_eq!(e.name, "CENTER");
+        assert_eq!(e.value, 1);
+        assert_eq!(e.xml_value, Some("ctr"));
+        assert_eq!(e.doc, "Center alignment");
+    }
+
+    #[test]
+    fn test_base_xml_enum_to_xml() {
+        let e = BaseXmlEnum::new("CENTER", 1, Some("ctr"), "Center");
+        assert_eq!(e.to_xml(), Ok("ctr"));
+    }
+
+    #[test]
+    fn test_base_xml_enum_to_xml_none() {
+        let e = BaseXmlEnum::new("NONE", 0, None, "No XML");
+        assert!(e.to_xml().is_err());
+    }
+
+    #[test]
+    fn test_base_xml_enum_from_xml() {
+        let members = [
+            BaseXmlEnum::new("LEFT", 0, Some("l"), "Left"),
+            BaseXmlEnum::new("CENTER", 1, Some("ctr"), "Center"),
+            BaseXmlEnum::new("RIGHT", 2, Some("r"), "Right"),
+        ];
+        
+        let result = BaseXmlEnum::from_xml("ctr", &members);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap().name, "CENTER");
+    }
+
+    #[test]
+    fn test_base_xml_enum_from_xml_not_found() {
+        let members = [
+            BaseXmlEnum::new("LEFT", 0, Some("l"), "Left"),
+        ];
+        
+        let result = BaseXmlEnum::from_xml("unknown", &members);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_base_xml_enum_from_xml_empty() {
+        let members = [
+            BaseXmlEnum::new("LEFT", 0, Some("l"), "Left"),
+        ];
+        
+        let result = BaseXmlEnum::from_xml("", &members);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_base_xml_enum_display() {
+        let e = BaseXmlEnum::new("CENTER", 1, Some("ctr"), "Center");
+        assert_eq!(format!("{}", e), "CENTER (1)");
+    }
+
+    #[test]
+    fn test_enum_registry_new() {
+        let registry = EnumRegistry::new();
+        assert!(registry.get("unknown").is_none());
+    }
+
+    #[test]
+    fn test_enum_registry_default() {
+        let registry = EnumRegistry::default();
+        assert!(registry.get("unknown").is_none());
+    }
+
+    #[test]
+    fn test_enum_registry_register_and_get() {
+        let mut registry = EnumRegistry::new();
+        let member = BaseXmlEnum::new("CENTER", 1, Some("ctr"), "Center");
+        registry.register("CENTER".to_string(), member);
+        
+        let result = registry.get("CENTER");
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().name, "CENTER");
+    }
+
+    #[test]
+    fn test_enum_registry_get_not_found() {
+        let registry = EnumRegistry::new();
+        assert!(registry.get("NOT_FOUND").is_none());
+    }
+
+    #[test]
+    fn test_base_enum_hash() {
+        use std::collections::HashSet;
+        let mut set = HashSet::new();
+        set.insert(BaseEnum::new("A", 1, "A"));
+        set.insert(BaseEnum::new("B", 2, "B"));
+        set.insert(BaseEnum::new("A", 1, "A")); // duplicate
+        assert_eq!(set.len(), 2);
+    }
+}
