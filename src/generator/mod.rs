@@ -12,7 +12,7 @@ pub mod charts;
 pub mod charts_xml;
 
 pub use builder::{create_pptx, create_pptx_with_content};
-pub use xml::SlideContent;
+pub use xml::{SlideContent, SlideLayout};
 pub use text::{TextFormat, FormattedText};
 pub use shapes::{Shape, ShapeType, ShapeFill, ShapeLine};
 pub use tables::{Table, TableRow, TableCell, TableBuilder};

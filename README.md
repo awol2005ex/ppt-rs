@@ -100,6 +100,62 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+#### Slide Layouts
+
+The library supports multiple slide layouts for different presentation needs:
+
+```rust
+use pptx_rs::generator::{SlideContent, SlideLayout, create_pptx_with_content};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let slides = vec![
+        // Title only (no content area)
+        SlideContent::new("Title Slide")
+            .layout(SlideLayout::TitleOnly),
+        
+        // Centered title (good for cover slides)
+        SlideContent::new("Cover Slide")
+            .layout(SlideLayout::CenteredTitle)
+            .title_size(60),
+        
+        // Standard layout (title + content)
+        SlideContent::new("Standard Layout")
+            .add_bullet("Content point 1")
+            .add_bullet("Content point 2")
+            .layout(SlideLayout::TitleAndContent),
+        
+        // Large content area (smaller title)
+        SlideContent::new("Big Content")
+            .add_bullet("More space for content")
+            .add_bullet("Maximized content area")
+            .layout(SlideLayout::TitleAndBigContent),
+        
+        // Two column layout
+        SlideContent::new("Comparison")
+            .add_bullet("Left column content")
+            .add_bullet("Right column content")
+            .layout(SlideLayout::TwoColumn),
+        
+        // Blank slide
+        SlideContent::new("")
+            .layout(SlideLayout::Blank),
+    ];
+    
+    let pptx_data = create_pptx_with_content("Layout Demo", slides)?;
+    std::fs::write("layouts.pptx", pptx_data)?;
+    
+    Ok(())
+}
+```
+
+**Available Layouts:**
+- `TitleOnly` - Title at top, no content area
+- `CenteredTitle` - Title centered on slide (good for cover slides)
+- `TitleAndContent` - Standard layout with title and bullet points (default)
+- `TitleAndBigContent` - Smaller title, larger content area
+- `TwoColumn` - Title at top, content split into left and right columns (bullets auto-split)
+- `Blank` - Empty slide
+
 #### Creating Charts
 
 ```rust

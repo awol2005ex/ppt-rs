@@ -1,5 +1,35 @@
 //! XML generation for PPTX components
 
+/// Slide layout types
+#[derive(Clone, Debug, Copy, PartialEq, Eq)]
+pub enum SlideLayout {
+    /// Title only (no content area)
+    TitleOnly,
+    /// Title and content (bullets)
+    TitleAndContent,
+    /// Title at top, content fills rest
+    TitleAndBigContent,
+    /// Blank slide
+    Blank,
+    /// Title centered on slide
+    CenteredTitle,
+    /// Two columns: title on left, content on right
+    TwoColumn,
+}
+
+impl SlideLayout {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SlideLayout::TitleOnly => "titleOnly",
+            SlideLayout::TitleAndContent => "titleAndContent",
+            SlideLayout::TitleAndBigContent => "titleAndBigContent",
+            SlideLayout::Blank => "blank",
+            SlideLayout::CenteredTitle => "centeredTitle",
+            SlideLayout::TwoColumn => "twoColumn",
+        }
+    }
+}
+
 /// Slide content for more complex presentations
 #[derive(Clone, Debug)]
 pub struct SlideContent {
@@ -18,6 +48,7 @@ pub struct SlideContent {
     pub has_table: bool,              // Indicates if slide should include a table
     pub has_chart: bool,              // Indicates if slide should include a chart
     pub has_image: bool,              // Indicates if slide should include an image
+    pub layout: SlideLayout,          // Slide layout type
 }
 
 impl SlideContent {
@@ -38,6 +69,7 @@ impl SlideContent {
             has_table: false,
             has_chart: false,
             has_image: false,
+            layout: SlideLayout::TitleAndContent,  // Default layout
         }
     }
 
@@ -121,6 +153,12 @@ impl SlideContent {
     /// Mark slide to include an image
     pub fn with_image(mut self) -> Self {
         self.has_image = true;
+        self
+    }
+
+    /// Set slide layout
+    pub fn layout(mut self, layout: SlideLayout) -> Self {
+        self.layout = layout;
         self
     }
 }
@@ -299,11 +337,492 @@ pub fn create_slide_xml(slide_num: usize, title: &str) -> String {
 }
 
 pub fn create_slide_xml_with_content(_slide_num: usize, content: &SlideContent) -> String {
-    // Convert point sizes to hundredths of a point (PPTX format)
+    match content.layout {
+        SlideLayout::Blank => create_blank_slide(),
+        SlideLayout::TitleOnly => create_title_only_slide(content),
+        SlideLayout::CenteredTitle => create_centered_title_slide(content),
+        SlideLayout::TitleAndBigContent => create_title_and_big_content_slide(content),
+        SlideLayout::TwoColumn => create_two_column_slide(content),
+        SlideLayout::TitleAndContent => create_title_and_content_slide(content),
+    }
+}
+
+fn create_blank_slide() -> String {
+    r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+<p:cSld>
+<p:bg>
+<p:bgRef idx="1001">
+<a:schemeClr val="bg1"/>
+</p:bgRef>
+</p:bg>
+<p:spTree>
+<p:nvGrpSpPr>
+<p:cNvPr id="1" name=""/>
+<p:cNvGrpSpPr/>
+<p:nvPr/>
+</p:nvGrpSpPr>
+<p:grpSpPr>
+<a:xfrm>
+<a:off x="0" y="0"/>
+<a:ext cx="9144000" cy="6858000"/>
+<a:chOff x="0" y="0"/>
+<a:chExt cx="9144000" cy="6858000"/>
+</a:xfrm>
+</p:grpSpPr>
+</p:spTree>
+</p:cSld>
+<p:clrMapOvr>
+<a:masterClrMapping/>
+</p:clrMapOvr>
+</p:sld>"#.to_string()
+}
+
+fn create_title_only_slide(content: &SlideContent) -> String {
+    let title_size = content.title_size.unwrap_or(44) * 100;
+    let title_props = generate_text_props(
+        title_size,
+        content.title_bold,
+        content.title_italic,
+        content.title_underline,
+        content.title_color.as_deref(),
+    );
+
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+<p:cSld>
+<p:bg>
+<p:bgRef idx="1001">
+<a:schemeClr val="bg1"/>
+</p:bgRef>
+</p:bg>
+<p:spTree>
+<p:nvGrpSpPr>
+<p:cNvPr id="1" name=""/>
+<p:cNvGrpSpPr/>
+<p:nvPr/>
+</p:nvGrpSpPr>
+<p:grpSpPr>
+<a:xfrm>
+<a:off x="0" y="0"/>
+<a:ext cx="9144000" cy="6858000"/>
+<a:chOff x="0" y="0"/>
+<a:chExt cx="9144000" cy="6858000"/>
+</a:xfrm>
+</p:grpSpPr>
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="2" name="Title"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="title"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="274638"/>
+<a:ext cx="8230200" cy="1143000"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>
+<a:p>
+<a:r>
+{}
+<a:t>{}</a:t>
+</a:r>
+</a:p>
+</p:txBody>
+</p:sp>
+</p:spTree>
+</p:cSld>
+<p:clrMapOvr>
+<a:masterClrMapping/>
+</p:clrMapOvr>
+</p:sld>"#,
+        title_props, escape_xml(&content.title)
+    )
+}
+
+fn create_centered_title_slide(content: &SlideContent) -> String {
+    let title_size = content.title_size.unwrap_or(54) * 100;
+    let title_props = generate_text_props(
+        title_size,
+        content.title_bold,
+        content.title_italic,
+        content.title_underline,
+        content.title_color.as_deref(),
+    );
+
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+<p:cSld>
+<p:bg>
+<p:bgRef idx="1001">
+<a:schemeClr val="bg1"/>
+</p:bgRef>
+</p:bg>
+<p:spTree>
+<p:nvGrpSpPr>
+<p:cNvPr id="1" name=""/>
+<p:cNvGrpSpPr/>
+<p:nvPr/>
+</p:nvGrpSpPr>
+<p:grpSpPr>
+<a:xfrm>
+<a:off x="0" y="0"/>
+<a:ext cx="9144000" cy="6858000"/>
+<a:chOff x="0" y="0"/>
+<a:chExt cx="9144000" cy="6858000"/>
+</a:xfrm>
+</p:grpSpPr>
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="2" name="Title"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="ctrTitle"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="2743200"/>
+<a:ext cx="8230200" cy="1371600"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>
+<a:p>
+<a:pPr algn="ctr"/>
+<a:r>
+{}
+<a:t>{}</a:t>
+</a:r>
+</a:p>
+</p:txBody>
+</p:sp>
+</p:spTree>
+</p:cSld>
+<p:clrMapOvr>
+<a:masterClrMapping/>
+</p:clrMapOvr>
+</p:sld>"#,
+        title_props, escape_xml(&content.title)
+    )
+}
+
+fn create_title_and_big_content_slide(content: &SlideContent) -> String {
     let title_size = content.title_size.unwrap_or(44) * 100;
     let content_size = content.content_size.unwrap_or(28) * 100;
 
-    // Generate title text properties
+    let title_props = generate_text_props(
+        title_size,
+        content.title_bold,
+        content.title_italic,
+        content.title_underline,
+        content.title_color.as_deref(),
+    );
+
+    let mut xml = format!(
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+<p:cSld>
+<p:bg>
+<p:bgRef idx="1001">
+<a:schemeClr val="bg1"/>
+</p:bgRef>
+</p:bg>
+<p:spTree>
+<p:nvGrpSpPr>
+<p:cNvPr id="1" name=""/>
+<p:cNvGrpSpPr/>
+<p:nvPr/>
+</p:nvGrpSpPr>
+<p:grpSpPr>
+<a:xfrm>
+<a:off x="0" y="0"/>
+<a:ext cx="9144000" cy="6858000"/>
+<a:chOff x="0" y="0"/>
+<a:chExt cx="9144000" cy="6858000"/>
+</a:xfrm>
+</p:grpSpPr>
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="2" name="Title"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="title"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="274638"/>
+<a:ext cx="8230200" cy="914400"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>
+<a:p>
+<a:r>
+{}
+<a:t>{}</a:t>
+</a:r>
+</a:p>
+</p:txBody>
+</p:sp>"#,
+        title_props, escape_xml(&content.title)
+    );
+
+    if !content.content.is_empty() {
+        xml.push_str(
+            r#"
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="3" name="Content"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="body" idx="1"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="1189200"/>
+<a:ext cx="8230200" cy="5668800"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>"#
+        );
+
+        let content_props = generate_text_props(
+            content_size,
+            content.content_bold,
+            content.content_italic,
+            content.content_underline,
+            content.content_color.as_deref(),
+        );
+
+        for bullet in content.content.iter() {
+            xml.push_str(&format!(
+                r#"
+<a:p>
+<a:pPr lvl="0"/>
+<a:r>
+{}
+<a:t>{}</a:t>
+</a:r>
+</a:p>"#,
+                content_props, escape_xml(bullet)
+            ));
+        }
+
+        xml.push_str(
+            r#"
+</p:txBody>
+</p:sp>"#
+        );
+    }
+
+    xml.push_str(
+        r#"
+</p:spTree>
+</p:cSld>
+<p:clrMapOvr>
+<a:masterClrMapping/>
+</p:clrMapOvr>
+</p:sld>"#
+    );
+
+    xml
+}
+
+fn create_two_column_slide(content: &SlideContent) -> String {
+    let title_size = content.title_size.unwrap_or(44) * 100;
+    let content_size = content.content_size.unwrap_or(24) * 100;
+
+    let title_props = generate_text_props(
+        title_size,
+        content.title_bold,
+        content.title_italic,
+        content.title_underline,
+        content.title_color.as_deref(),
+    );
+
+    let mut xml = format!(
+        r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main">
+<p:cSld>
+<p:bg>
+<p:bgRef idx="1001">
+<a:schemeClr val="bg1"/>
+</p:bgRef>
+</p:bg>
+<p:spTree>
+<p:nvGrpSpPr>
+<p:cNvPr id="1" name=""/>
+<p:cNvGrpSpPr/>
+<p:nvPr/>
+</p:nvGrpSpPr>
+<p:grpSpPr>
+<a:xfrm>
+<a:off x="0" y="0"/>
+<a:ext cx="9144000" cy="6858000"/>
+<a:chOff x="0" y="0"/>
+<a:chExt cx="9144000" cy="6858000"/>
+</a:xfrm>
+</p:grpSpPr>
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="2" name="Title"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="title"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="274638"/>
+<a:ext cx="8230200" cy="914400"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>
+<a:p>
+<a:r>
+{}
+<a:t>{}</a:t>
+</a:r>
+</a:p>
+</p:txBody>
+</p:sp>"#,
+        title_props, escape_xml(&content.title)
+    );
+
+    if !content.content.is_empty() {
+        let content_props = generate_text_props(
+            content_size,
+            content.content_bold,
+            content.content_italic,
+            content.content_underline,
+            content.content_color.as_deref(),
+        );
+
+        // Split content into two halves for left and right columns
+        let mid = (content.content.len() + 1) / 2;
+        let left_content = &content.content[..mid];
+        let right_content = &content.content[mid..];
+
+        // Left column
+        xml.push_str(
+            r#"
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="3" name="Left Content"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="body" idx="1"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="457200" y="1189200"/>
+<a:ext cx="4115100" cy="5668800"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>"#
+        );
+
+        for bullet in left_content.iter() {
+            xml.push_str(&format!(
+                r#"
+<a:p>
+<a:pPr lvl="0"/>
+<a:r>
+{}
+<a:t>{}</a:t>
+</a:r>
+</a:p>"#,
+                content_props, escape_xml(bullet)
+            ));
+        }
+
+        xml.push_str(
+            r#"
+</p:txBody>
+</p:sp>"#
+        );
+
+        // Right column
+        if !right_content.is_empty() {
+            xml.push_str(
+                r#"
+<p:sp>
+<p:nvSpPr>
+<p:cNvPr id="4" name="Right Content"/>
+<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr>
+<p:nvPr><p:ph type="body" idx="2"/></p:nvPr>
+</p:nvSpPr>
+<p:spPr>
+<a:xfrm>
+<a:off x="4572300" y="1189200"/>
+<a:ext cx="4115100" cy="5668800"/>
+</a:xfrm>
+<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+<a:noFill/>
+</p:spPr>
+<p:txBody>
+<a:bodyPr/>
+<a:lstStyle/>"#
+            );
+
+            for bullet in right_content.iter() {
+                xml.push_str(&format!(
+                    r#"
+<a:p>
+<a:pPr lvl="0"/>
+<a:r>
+{}
+<a:t>{}</a:t>
+</a:r>
+</a:p>"#,
+                    content_props, escape_xml(bullet)
+                ));
+            }
+
+            xml.push_str(
+                r#"
+</p:txBody>
+</p:sp>"#
+            );
+        }
+    }
+
+    xml.push_str(
+        r#"
+</p:spTree>
+</p:cSld>
+<p:clrMapOvr>
+<a:masterClrMapping/>
+</p:clrMapOvr>
+</p:sld>"#
+    );
+
+    xml
+}
+
+fn create_title_and_content_slide(content: &SlideContent) -> String {
+    let title_size = content.title_size.unwrap_or(44) * 100;
+    let content_size = content.content_size.unwrap_or(28) * 100;
+
     let title_props = generate_text_props(
         title_size,
         content.title_bold,
@@ -385,7 +904,6 @@ pub fn create_slide_xml_with_content(_slide_num: usize, content: &SlideContent) 
 <a:lstStyle/>"#
         );
 
-        // Generate content text properties
         let content_props = generate_text_props(
             content_size,
             content.content_bold,

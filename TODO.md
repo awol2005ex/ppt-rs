@@ -59,6 +59,19 @@
 - [x] Embed images directly into slides (placeholder)
 - [x] Update `create_pptx_with_content` to support rich content
 
+### 4. Slide Layouts ✓
+- [x] Implement SlideLayout enum with 6 layout types
+- [x] TitleOnly layout
+- [x] CenteredTitle layout
+- [x] TitleAndContent layout (default)
+- [x] TitleAndBigContent layout
+- [x] TwoColumn layout
+- [x] Blank layout
+- [x] Add layout builder method to SlideContent
+- [x] Update slide XML generation for each layout
+- [x] Create layout_demo.rs example
+- [x] Update README with layout documentation
+
 ## Completed Features
 
 ### 1. Complete Text Styling ✓
