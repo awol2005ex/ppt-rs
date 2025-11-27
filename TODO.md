@@ -65,12 +65,24 @@
 - [x] CenteredTitle layout
 - [x] TitleAndContent layout (default)
 - [x] TitleAndBigContent layout
-- [x] TwoColumn layout
+- [x] TwoColumn layout (with auto-split bullets)
 - [x] Blank layout
 - [x] Add layout builder method to SlideContent
 - [x] Update slide XML generation for each layout
 - [x] Create layout_demo.rs example
 - [x] Update README with layout documentation
+
+### 5. Table Rendering ✓
+- [x] Add table field to SlideContent struct
+- [x] Add table builder method to SlideContent
+- [x] Integrate table XML generation into slide rendering
+- [x] Tables render instead of bullets when present
+- [x] Support styled tables with colors and bold
+- [x] Create table_demo.rs example
+- [x] Update README with table documentation
+- [x] Fix table cell XML generation with proper margins and text anchor
+- [x] Create table_generation.rs example with real table data
+- [x] Verify all table examples generate valid PPTX files
 
 ## Completed Features
 

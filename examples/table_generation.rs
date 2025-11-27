@@ -54,14 +54,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn create_simple_table_example() -> Result<(), Box<dyn std::error::Error>> {
+    let table = Table::from_data(
+        vec![
+            vec!["Name", "Age"],
+            vec!["Alice", "30"],
+            vec!["Bob", "25"],
+        ],
+        vec![2000000, 2000000],
+        500000,
+        1500000,
+    );
+
     let slides = vec![
         SlideContent::new("Simple 2x2 Table")
             .add_bullet("Table with basic structure")
             .add_bullet("Headers and data rows"),
         SlideContent::new("Table Data")
-            .add_bullet("Name | Age")
-            .add_bullet("Alice | 30")
-            .add_bullet("Bob | 25"),
+            .table(table),
     ];
 
     let pptx_data = create_pptx_with_content("Simple Table", slides)?;
@@ -70,18 +79,45 @@ fn create_simple_table_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn create_styled_table_example() -> Result<(), Box<dyn std::error::Error>> {
+    let header_cells = vec![
+        TableCell::new("Name").bold().background_color("003366"),
+        TableCell::new("Age").bold().background_color("003366"),
+        TableCell::new("City").bold().background_color("003366"),
+    ];
+    let header_row = TableRow::new(header_cells);
+
+    let data_rows = vec![
+        TableRow::new(vec![
+            TableCell::new("Alice"),
+            TableCell::new("30"),
+            TableCell::new("NYC"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("Bob"),
+            TableCell::new("28"),
+            TableCell::new("LA"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("Carol"),
+            TableCell::new("35"),
+            TableCell::new("Chicago"),
+        ]),
+    ];
+
+    let table = Table::new(
+        vec![vec![header_row], data_rows].concat(),
+        vec![1500000, 1500000, 1500000],
+        500000,
+        1500000,
+    );
+
     let slides = vec![
         SlideContent::new("Styled Table")
             .title_bold(true)
             .title_color("003366")
             .add_bullet("Table with formatting"),
-        SlideContent::new("Header Row")
-            .add_bullet("Bold headers with background color")
-            .add_bullet("Regular data cells"),
-        SlideContent::new("Formatting Options")
-            .add_bullet("Bold text in cells")
-            .add_bullet("Background colors")
-            .add_bullet("Custom cell heights"),
+        SlideContent::new("People Data")
+            .table(table),
     ];
 
     let pptx_data = create_pptx_with_content("Styled Table", slides)?;
@@ -90,16 +126,45 @@ fn create_styled_table_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn create_data_table_example() -> Result<(), Box<dyn std::error::Error>> {
+    let header_cells = vec![
+        TableCell::new("Product").bold().background_color("1F497D"),
+        TableCell::new("Revenue").bold().background_color("1F497D"),
+        TableCell::new("Growth").bold().background_color("1F497D"),
+    ];
+    let header_row = TableRow::new(header_cells);
+
+    let data_rows = vec![
+        TableRow::new(vec![
+            TableCell::new("Product A"),
+            TableCell::new("$100K"),
+            TableCell::new("+15%"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("Product B"),
+            TableCell::new("$150K"),
+            TableCell::new("+22%"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("Product C"),
+            TableCell::new("$200K"),
+            TableCell::new("+18%"),
+        ]),
+    ];
+
+    let table = Table::new(
+        vec![vec![header_row], data_rows].concat(),
+        vec![2000000, 2000000, 1500000],
+        500000,
+        1500000,
+    );
+
     let slides = vec![
         SlideContent::new("Sales Data Table")
             .title_bold(true)
             .title_size(48)
             .add_bullet("Quarterly sales figures"),
         SlideContent::new("Q1 2025 Sales")
-            .add_bullet("Product | Revenue | Growth")
-            .add_bullet("Product A | $100K | +15%")
-            .add_bullet("Product B | $150K | +22%")
-            .add_bullet("Product C | $200K | +18%"),
+            .table(table),
         SlideContent::new("Summary")
             .content_bold(true)
             .add_bullet("Total Revenue: $450K")
@@ -113,20 +178,74 @@ fn create_data_table_example() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn create_multiple_tables_example() -> Result<(), Box<dyn std::error::Error>> {
+    // Table 1: Employees
+    let emp_header = TableRow::new(vec![
+        TableCell::new("ID").bold().background_color("4F81BD"),
+        TableCell::new("Name").bold().background_color("4F81BD"),
+        TableCell::new("Department").bold().background_color("4F81BD"),
+    ]);
+    let emp_rows = vec![
+        TableRow::new(vec![
+            TableCell::new("001"),
+            TableCell::new("Alice"),
+            TableCell::new("Engineering"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("002"),
+            TableCell::new("Bob"),
+            TableCell::new("Sales"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("003"),
+            TableCell::new("Carol"),
+            TableCell::new("Marketing"),
+        ]),
+    ];
+    let emp_table = Table::new(
+        vec![vec![emp_header], emp_rows].concat(),
+        vec![1000000, 2000000, 2000000],
+        500000,
+        1500000,
+    );
+
+    // Table 2: Projects
+    let proj_header = TableRow::new(vec![
+        TableCell::new("Project").bold().background_color("003366"),
+        TableCell::new("Status").bold().background_color("003366"),
+        TableCell::new("Owner").bold().background_color("003366"),
+    ]);
+    let proj_rows = vec![
+        TableRow::new(vec![
+            TableCell::new("Project A"),
+            TableCell::new("In Progress"),
+            TableCell::new("Alice"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("Project B"),
+            TableCell::new("Completed"),
+            TableCell::new("Bob"),
+        ]),
+        TableRow::new(vec![
+            TableCell::new("Project C"),
+            TableCell::new("Planning"),
+            TableCell::new("Carol"),
+        ]),
+    ];
+    let proj_table = Table::new(
+        vec![vec![proj_header], proj_rows].concat(),
+        vec![2000000, 2000000, 1500000],
+        500000,
+        1500000,
+    );
+
     let slides = vec![
         SlideContent::new("Multiple Tables")
             .title_bold(true)
             .add_bullet("Slide with multiple tables"),
         SlideContent::new("Table 1: Employees")
-            .add_bullet("ID | Name | Department")
-            .add_bullet("001 | Alice | Engineering")
-            .add_bullet("002 | Bob | Sales")
-            .add_bullet("003 | Carol | Marketing"),
+            .table(emp_table),
         SlideContent::new("Table 2: Projects")
-            .add_bullet("Project | Status | Owner")
-            .add_bullet("Project A | In Progress | Alice")
-            .add_bullet("Project B | Completed | Bob")
-            .add_bullet("Project C | Planning | Carol"),
+            .table(proj_table),
         SlideContent::new("Summary")
             .add_bullet("Total Employees: 3")
             .add_bullet("Active Projects: 3")

@@ -70,8 +70,8 @@ fn generate_row_xml(row: &TableRow) -> String {
 fn generate_cell_xml(cell: &TableCell) -> String {
     let mut xml = String::from(r#"<a:tc>"#);
 
-    // Cell properties
-    xml.push_str("<a:tcPr>");
+    // Cell properties with margins and text anchor
+    xml.push_str(r#"<a:tcPr marL="91440" marR="91440" marT="45720" marB="45720" anchor="ctr" anchorCtr="0">"#);
 
     // Background color if specified
     if let Some(color) = &cell.background_color {
@@ -79,17 +79,20 @@ fn generate_cell_xml(cell: &TableCell) -> String {
             r#"<a:solidFill><a:srgbClr val="{}"/></a:solidFill>"#,
             color
         ));
+    } else {
+        // Default light gray background for better visibility
+        xml.push_str(r#"<a:solidFill><a:srgbClr val="F2F2F2"/></a:solidFill>"#);
     }
 
     xml.push_str("</a:tcPr>");
 
     // Cell text body
-    xml.push_str(r#"<a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r>"#);
+    xml.push_str(r#"<a:txBody><a:bodyPr rot="0" vert="horz" anchor="ctr" anchorCtr="0"/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r>"#);
 
     // Text properties
     let bold = if cell.bold { "1" } else { "0" };
     xml.push_str(&format!(
-        r#"<a:rPr lang="en-US" sz="2400" b="{}"/>"#,
+        r#"<a:rPr lang="en-US" sz="2000" b="{}"/>"#,
         bold
     ));
 

@@ -49,6 +49,7 @@ pub struct SlideContent {
     pub has_chart: bool,              // Indicates if slide should include a chart
     pub has_image: bool,              // Indicates if slide should include an image
     pub layout: SlideLayout,          // Slide layout type
+    pub table: Option<super::tables::Table>, // Optional table to render
 }
 
 impl SlideContent {
@@ -70,6 +71,7 @@ impl SlideContent {
             has_chart: false,
             has_image: false,
             layout: SlideLayout::TitleAndContent,  // Default layout
+            table: None,
         }
     }
 
@@ -159,6 +161,13 @@ impl SlideContent {
     /// Set slide layout
     pub fn layout(mut self, layout: SlideLayout) -> Self {
         self.layout = layout;
+        self
+    }
+
+    /// Set table for the slide
+    pub fn table(mut self, table: super::tables::Table) -> Self {
+        self.table = Some(table);
+        self.has_table = true;
         self
     }
 }
@@ -882,7 +891,12 @@ fn create_title_and_content_slide(content: &SlideContent) -> String {
         title_props, escape_xml(&content.title)
     );
 
-    if !content.content.is_empty() {
+    // Render table if present
+    if let Some(ref table) = content.table {
+        xml.push_str("\n");
+        xml.push_str(&super::tables_xml::generate_table_xml(table, 3));
+    } else if !content.content.is_empty() {
+        // Render bullets if no table
         xml.push_str(
             r#"
 <p:sp>

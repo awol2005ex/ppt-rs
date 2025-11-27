@@ -156,6 +156,39 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `TwoColumn` - Title at top, content split into left and right columns (bullets auto-split)
 - `Blank` - Empty slide
 
+#### Creating Tables
+
+```rust
+use pptx_rs::generator::{SlideContent, Table, TableRow, TableCell, TableBuilder, create_pptx_with_content};
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a table using builder
+    let table = TableBuilder::new(vec![2000000, 2000000, 2000000])
+        .position(500000, 1500000)
+        .add_simple_row(vec!["Name", "Department", "Status"])
+        .add_simple_row(vec!["Alice", "Engineering", "Active"])
+        .add_simple_row(vec!["Bob", "Sales", "Active"])
+        .build();
+    
+    // Create slide with table
+    let slides = vec![
+        SlideContent::new("Employee Data")
+            .table(table),
+    ];
+    
+    let pptx_data = create_pptx_with_content("Tables Demo", slides)?;
+    std::fs::write("tables.pptx", pptx_data)?;
+    
+    Ok(())
+}
+```
+
+**Table Features:**
+- Simple table creation with `TableBuilder`
+- Cell formatting: bold, background colors
+- Automatic column width management
+- Positioned anywhere on slide
+
 #### Creating Charts
 
 ```rust
