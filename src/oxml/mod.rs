@@ -42,7 +42,11 @@ pub use table::{Table as OxmlTable, TableRow as OxmlTableRow, TableCell as OxmlT
 pub use shapes::{Transform2D, PresetGeometry, SolidFill, LineProperties, ShapeProperties, NonVisualProperties};
 
 // DML elements
-pub use dml::{Color, Fill, Outline, GradientFill, GradientStop, PatternFill, EffectExtent, Point, Size};
+pub use dml::{
+    Color, Fill, Outline, GradientFill, GradientStop, PatternFill, PictureFill, TextureFill,
+    EffectExtent, Point, Size, Shadow, Glow, Reflection,
+    LineCap, LineJoin, DashPattern,
+};
 
 // Chart elements
 pub use chart::{ChartKind, ChartSeries as OxmlChartSeries, ChartAxis, ChartLegend, ChartTitle, NumericData, StringData, DataPoint, CategoryPoint};

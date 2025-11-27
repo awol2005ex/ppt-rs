@@ -83,8 +83,8 @@ fn generate_cell_xml(cell: &TableCell) -> String {
 
     xml.push_str("</a:tcPr>");
 
-    // Cell text body
-    xml.push_str(r#"<a:txBody><a:bodyPr rot="0" vert="horz" anchor="ctr" anchorCtr="0"/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r>"#);
+    // Cell text body - handle multi-line content
+    xml.push_str(r#"<a:txBody><a:bodyPr rot="0" vert="horz" anchor="ctr" anchorCtr="0" wrap="square"/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r>"#);
 
     // Text properties
     let bold = if cell.bold { "1" } else { "0" };
@@ -92,9 +92,25 @@ fn generate_cell_xml(cell: &TableCell) -> String {
         r#"<a:rPr lang="en-US" sz="2000" b="{bold}"/>"#
     ));
 
-    // Cell text
+    // Cell text - handle newlines by splitting into multiple paragraphs
     let text = escape_xml(&cell.text);
-    xml.push_str(&format!(r#"<a:t>{text}</a:t>"#));
+    if text.contains('\n') {
+        // Multi-line content: split by newlines and create separate paragraphs
+        let lines: Vec<&str> = text.split('\n').collect();
+        for (i, line) in lines.iter().enumerate() {
+            if i > 0 {
+                // Close previous paragraph and start new one
+                xml.push_str(r#"</a:r></a:p><a:p><a:pPr algn="ctr"/><a:r>"#);
+                xml.push_str(&format!(
+                    r#"<a:rPr lang="en-US" sz="2000" b="{bold}"/>"#
+                ));
+            }
+            xml.push_str(&format!(r#"<a:t>{line}</a:t>"#));
+        }
+    } else {
+        // Single line content
+        xml.push_str(&format!(r#"<a:t>{text}</a:t>"#));
+    }
 
     xml.push_str("</a:r></a:p></a:txBody></a:tc>");
 
@@ -150,5 +166,16 @@ mod tests {
         assert!(xml.contains("&amp;"));
         assert!(xml.contains("&lt;"));
         assert!(xml.contains("&gt;"));
+    }
+
+    #[test]
+    fn test_generate_cell_with_multiline() {
+        let cell = TableCell::new("Line 1\nLine 2\nLine 3");
+        let xml = generate_cell_xml(&cell);
+        assert!(xml.contains("Line 1"));
+        assert!(xml.contains("Line 2"));
+        assert!(xml.contains("Line 3"));
+        // Should have multiple paragraphs
+        assert!(xml.matches("</a:p>").count() >= 3);
     }
 }

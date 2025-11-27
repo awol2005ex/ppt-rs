@@ -75,7 +75,7 @@ impl FromMarkdownCommand {
         Ok(())
     }
 
-    fn parse_markdown(content: &str) -> Result<Vec<SlideContent>, String> {
+    pub fn parse_markdown(content: &str) -> Result<Vec<SlideContent>, String> {
         let mut slides = Vec::new();
         let mut current_slide: Option<SlideContent> = None;
 
@@ -121,6 +121,7 @@ impl FromMarkdownCommand {
         Ok(slides)
     }
 }
+
 
 impl InfoCommand {
     pub fn execute(file: &str) -> Result<(), String> {
