@@ -5,6 +5,25 @@ use clap::{Parser as ClapParser, Subcommand};
 #[derive(ClapParser, Debug)]
 #[command(name = "pptcli")]
 #[command(about = "PowerPoint Generator - Create, read, and update PowerPoint 2007+ (.pptx) files")]
+#[command(
+    long_about = "pptcli - A command-line tool for generating PowerPoint presentations from Markdown or programmatically.
+
+Examples:
+  # Create a simple presentation
+  pptcli create output.pptx --title \"My Presentation\" --slides 5
+
+  # Convert Markdown to PowerPoint
+  pptcli md2ppt slides.md presentation.pptx
+
+  # Auto-generate output filename from Markdown
+  pptcli md2ppt slides.md
+
+  # Validate a PPTX file
+  pptcli validate presentation.pptx
+
+  # Show presentation information
+  pptcli info presentation.pptx"
+)]
 #[command(version)]
 pub struct Cli {
     #[command(subcommand)]
@@ -14,51 +33,95 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 pub enum Commands {
     /// Create a new presentation
+    #[command(
+        long_about = "Create a new PowerPoint presentation with the specified number of slides.
+
+Examples:
+  pptcli create output.pptx --title \"My Presentation\" --slides 5
+  pptcli create report.pptx --slides 10"
+    )]
     Create {
         /// Output file path (.pptx)
-        #[arg(value_name = "FILE")]
+        #[arg(value_name = "FILE", help = "Path to the output PPTX file")]
         output: String,
         
         /// Presentation title
-        #[arg(long)]
+        #[arg(long, help = "Title of the presentation (stored in metadata)")]
         title: Option<String>,
         
         /// Number of slides to create
-        #[arg(long, default_value_t = 1)]
+        #[arg(long, default_value_t = 1, help = "Number of blank slides to create")]
         slides: usize,
         
         /// Template file to use
-        #[arg(long)]
+        #[arg(long, help = "Template PPTX file to use as base (not yet implemented)")]
         template: Option<String>,
     },
     
     /// Generate PPTX from Markdown file
-    #[command(name = "md2ppt", alias = "from-md", alias = "from-markdown")]
+    #[command(
+        name = "md2ppt",
+        alias = "from-md",
+        alias = "from-markdown",
+        long_about = "Convert a Markdown file to a PowerPoint presentation.
+
+Each # heading creates a new slide. Bullet points (-, *, +) become slide content.
+
+Markdown Format:
+  # Slide Title
+  - First bullet point
+  - Second bullet point
+
+Examples:
+  pptcli md2ppt slides.md presentation.pptx
+  pptcli md2ppt slides.md --title \"My Presentation\"
+  pptcli md2ppt slides.md  # Auto-generates slides.pptx"
+    )]
     Md2Ppt {
         /// Input markdown file
-        #[arg(value_name = "INPUT")]
+        #[arg(value_name = "INPUT", help = "Path to the input Markdown file")]
         input: String,
         
         /// Output PPTX file (optional: auto-generated from input if not provided)
-        #[arg(value_name = "OUTPUT")]
+        #[arg(value_name = "OUTPUT", help = "Path to the output PPTX file (default: INPUT.pptx)")]
         output: Option<String>,
         
         /// Presentation title
-        #[arg(long)]
+        #[arg(long, help = "Title of the presentation (overrides Markdown content)")]
         title: Option<String>,
     },
     
     /// Show presentation information
+    #[command(
+        long_about = "Display information about a PPTX file.
+
+Shows file size, modification date, and basic metadata.
+
+Example:
+  pptcli info presentation.pptx"
+    )]
     Info {
         /// PPTX file to inspect
-        #[arg(value_name = "FILE")]
+        #[arg(value_name = "FILE", help = "Path to the PPTX file to inspect")]
         file: String,
     },
     
     /// Validate a PPTX file for ECMA-376 compliance
+    #[command(
+        long_about = "Validate a PPTX file for ECMA-376 Office Open XML compliance.
+
+Checks:
+  - ZIP archive integrity
+  - Required XML files presence
+  - XML validity
+  - Relationships structure
+
+Example:
+  pptcli validate presentation.pptx"
+    )]
     Validate {
         /// PPTX file to validate
-        #[arg(value_name = "FILE")]
+        #[arg(value_name = "FILE", help = "Path to the PPTX file to validate")]
         file: String,
     },
 }

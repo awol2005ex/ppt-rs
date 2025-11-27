@@ -112,6 +112,28 @@ The Markdown format is simple and intuitive:
 
 Convert with: `pptcli md2ppt presentation.md` → `presentation.pptx`
 
+## CLI Commands
+
+### Validate PPTX Files
+
+Validate a PPTX file for ECMA-376 compliance:
+
+```bash
+pptcli validate presentation.pptx
+```
+
+This checks:
+- ZIP archive integrity
+- Required XML files presence
+- XML validity
+- Relationships structure
+
+### Show Presentation Information
+
+```bash
+pptcli info presentation.pptx
+```
+
 ## Installation
 
 Add to `Cargo.toml`:
@@ -169,9 +191,23 @@ Unlike other Rust PPTX crates that:
 
 `ppt-rs`:
 - ✅ Generates **valid PPTX files** from day one
-- ✅ **Actively maintained** with comprehensive test coverage
+- ✅ **Actively maintained** with comprehensive test coverage (399+ tests)
 - ✅ **Complete XML structure** following ECMA-376 standard
+- ✅ **Validation tools** - Built-in validation command for quality assurance
+- ✅ **Alignment testing** - Framework for ensuring compatibility with python-pptx
 - ✅ **Production-ready** - used in real projects
+
+## Quality Assurance
+
+### Validation
+- Built-in validation command for ECMA-376 compliance checking
+- Comprehensive test suite (399+ tests)
+- Integration tests for end-to-end validation
+
+### Alignment Testing
+- Framework for comparing output with python-pptx standards
+- Alignment testing scripts and documentation
+- See [docs/ALIGNMENT.md](docs/ALIGNMENT.md) for details
 
 ## Technical Details
 
@@ -179,6 +215,7 @@ Unlike other Rust PPTX crates that:
 - **Standard**: ECMA-376 Office Open XML
 - **Compatibility**: PowerPoint, LibreOffice, Google Slides, Keynote
 - **Architecture**: Layered design with clear separation of concerns
+- **Test Coverage**: 399+ tests covering all major features
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation.
 

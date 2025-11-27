@@ -352,17 +352,25 @@ See [LEARNING_ANALYSIS.md](LEARNING_ANALYSIS.md) for detailed analysis.
   - [x] Update layout files to use constants (title_content, centered_title, title_only)
 
 ### Medium Priority Improvements (Phase 2: Developer Experience)
-- [ ] Improve test coverage (from ppt-rs1) ⭐⭐
-  - Review test structure from `ppt-rs1/tests/`
-  - Add more integration tests
-  - Focus on PPTX generation validation
-  - Target comprehensive coverage like ppt-rs1 (667 tests)
+- [x] Improve test coverage (from ppt-rs1) ⭐⭐ ✅
+  - [x] Review test structure from `ppt-rs1/tests/`
+  - [x] Add integration tests for validation command
+  - [x] Add integration tests for constants usage
+  - [x] Add integration tests for alignment testing
+  - [x] Add end-to-end PPTX generation validation tests
+  - [x] Created `tests/integration_tests.rs` with 11 new tests
+  - Current: ~399 tests (388 + 11 new integration tests)
 - [ ] Review trait-based architecture patterns (from ppt-rs1) ⭐⭐
   - Review trait patterns in `ppt-rs1/src/presentation/traits.rs`
   - Consider if similar patterns would benefit `ppt-rs`
   - Evaluate `PropertiesManager` for unified property access
 
 ### Low Priority Improvements (Phase 3: Optional Enhancements)
+- [x] Improve CLI help text ⭐ ✅
+  - [x] Added detailed command descriptions with examples
+  - [x] Added long_about text for main CLI
+  - [x] Added help text for all command arguments
+  - [x] Added usage examples in help output
 - [ ] Documentation improvements ⭐
   - Review documentation structure from both projects
   - Consider improvements to README and docs
