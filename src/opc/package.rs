@@ -84,6 +84,16 @@ impl Package {
         self.parts.insert(path, content);
     }
 
+    /// Remove a part by path
+    pub fn remove_part(&mut self, path: &str) -> Option<Vec<u8>> {
+        self.parts.remove(path)
+    }
+
+    /// Check if a part exists
+    pub fn has_part(&self, path: &str) -> bool {
+        self.parts.contains_key(path)
+    }
+
     /// Get all part paths
     pub fn part_paths(&self) -> Vec<&str> {
         self.parts.keys().map(|s| s.as_str()).collect()
@@ -92,6 +102,16 @@ impl Package {
     /// Get number of parts
     pub fn part_count(&self) -> usize {
         self.parts.len()
+    }
+
+    /// Get mutable reference to part content
+    pub fn get_part_mut(&mut self, path: &str) -> Option<&mut Vec<u8>> {
+        self.parts.get_mut(path)
+    }
+
+    /// Get part as string (for XML parts)
+    pub fn get_part_string(&self, path: &str) -> Option<String> {
+        self.parts.get(path).map(|v| String::from_utf8_lossy(v).to_string())
     }
 }
 

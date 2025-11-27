@@ -59,17 +59,22 @@
 
 ## High Priority - Next Steps
 
-### 1. XML Parsing for Reading Presentations
-- [ ] Implement XML parser in `oxml/xmlchemy.rs`
-- [ ] Parse slide content from existing PPTX files
-- [ ] Extract text, tables, charts, images
-- [ ] Build object model from XML
+### 1. XML Parsing for Reading Presentations ✓
+- [x] Implement XML parser in `oxml/xmlchemy.rs` (XmlParser, XmlElement)
+- [x] Parse slide content from existing PPTX files (SlideParser)
+- [x] Extract text, shapes, tables from slides
+- [x] Build object model from XML (ParsedSlide, ParsedShape, TextRun)
+- [x] PresentationReader for high-level PPTX reading
+- [x] Extract presentation metadata (title, creator, dates)
+- [x] Example: `read_presentation.rs`
 
-### 2. Slide Modification Capabilities
-- [ ] Open existing PPTX files
-- [ ] Parse and modify slide content
-- [ ] Add new slides to existing presentations
-- [ ] Update slide properties
+### 2. Slide Modification Capabilities ✓
+- [x] Open existing PPTX files (PresentationReader::open, PresentationEditor::open)
+- [x] Parse and modify slide content (PresentationEditor::update_slide)
+- [x] Add new slides to existing presentations (PresentationEditor::add_slide)
+- [x] Remove slides (PresentationEditor::remove_slide)
+- [x] Save modified presentations (PresentationEditor::save)
+- [x] Example: `edit_presentation.rs`
 
 ### 3. Enhanced Content Integration
 - [x] Embed tables directly into slides
@@ -134,17 +139,20 @@
 - [x] Test with various data sets
 - [x] Example programs demonstrating charts
 
-### 5. Reading & Modification (Partial) ⏳
+### 5. Reading & Modification ✓
 - [x] ZIP reading in `opc/package.rs` (implemented)
 - [x] ZIP writing in `opc/package.rs` (implemented)
-- [x] Package part management (get, add, list)
+- [x] Package part management (get, add, list, remove)
 - [x] Example: read_pptx.rs - Read and inspect PPTX files
 - [x] SlideContent extended with table, chart, image markers
 - [x] Comprehensive demo updated with all feature indicators
-- [ ] XML parsing in `oxml/xmlchemy.rs`
-- [ ] Open existing PPTX files and extract metadata
-- [ ] Modify existing presentations
-- [ ] Add slides to existing presentations
+- [x] XML parsing in `oxml/xmlchemy.rs` (XmlParser, XmlElement)
+- [x] Open existing PPTX files and extract metadata (PresentationReader)
+- [x] Modify existing presentations (PresentationEditor)
+- [x] Add slides to existing presentations (add_slide)
+- [x] Update slides (update_slide)
+- [x] Remove slides (remove_slide)
+- [x] Examples: read_presentation.rs, edit_presentation.rs
 
 ### 4. Parts Implementation
 - [ ] `parts/presentation.rs` - PresentationPart
