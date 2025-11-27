@@ -1,5 +1,17 @@
 # TODO - PPTX-RS Development
 
+## Recently Completed
+
+### Code Optimization (v1.0.3)
+- [x] Fixed failing test (file size check too strict)
+- [x] Created core module with trait-based XML generation (`ToXml`, `Positioned`, `Styled`)
+- [x] Added `XmlWriter` utility for efficient XML building
+- [x] Consolidated `escape_xml` and color handling in `core::xml_utils`
+- [x] Removed deprecated stub modules, simplified `lib.rs`
+- [x] Implemented `api::Presentation` with builder pattern
+- [x] Re-exported all major types from lib.rs for convenience
+- [x] All 196 tests passing
+
 ## Completed
 
 ### 1. Basic PPTX Generation ✓

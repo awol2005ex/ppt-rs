@@ -1,0 +1,10 @@
+//! Core traits and types for pptx-rs
+//!
+//! This module provides the foundational traits that enable trait-based
+//! XML generation and consistent behavior across all PPTX elements.
+
+mod traits;
+mod xml_utils;
+
+pub use traits::{ToXml, XmlElement, Positioned, Sized as ElementSized, Styled};
+pub use xml_utils::{escape_xml, XmlWriter};

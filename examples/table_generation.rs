@@ -154,8 +154,8 @@ fn create_data_table_example() -> Result<(), Box<dyn std::error::Error>> {
     let table = Table::new(
         vec![vec![header_row], data_rows].concat(),
         vec![2000000, 2000000, 1500000],
-        500000,
-        1500000,
+        457200,
+        1400000,
     );
 
     let slides = vec![

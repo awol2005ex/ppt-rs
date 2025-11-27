@@ -2,23 +2,32 @@
 //!
 //! A comprehensive Rust library for creating, reading, and updating PowerPoint 2007+ (.pptx) files.
 //!
-//! # Core Modules
+//! # Quick Start
 //!
+//! ```rust,no_run
+//! use pptx_rs::{create_pptx_with_content, SlideContent};
+//!
+//! let slides = vec![
+//!     SlideContent::new("Welcome")
+//!         .add_bullet("First point")
+//!         .add_bullet("Second point"),
+//! ];
+//! let pptx_data = create_pptx_with_content("My Presentation", slides).unwrap();
+//! std::fs::write("output.pptx", pptx_data).unwrap();
+//! ```
+//!
+//! # Module Organization
+//!
+//! - **core** - Core traits (`ToXml`, `Positioned`, `Styled`) and utilities
 //! - **generator** - PPTX file generation with ZIP packaging and XML creation
-//! - **integration** - High-level builders and utilities for presentations
-//! - **cli** - Command-line interface for PPTX operations
-//!
-//! # Supporting Modules
-//!
-//! - **config** - Configuration management
-//! - **constants** - Presentation constants and defaults
-//! - **enums** - Type-safe enumeration values
-//! - **exc** - Error types and handling
-//! - **util** - Utility functions (length conversions, etc.)
+//! - **integration** - High-level builders for presentations
 //! - **opc** - Open Packaging Convention (ZIP) handling
-//! - **oxml** - Office XML element definitions
+//! - **exc** - Error types
 
-// Core modules
+// Core traits and utilities
+pub mod core;
+
+// Main functionality
 pub mod generator;
 pub mod integration;
 pub mod cli;
@@ -32,66 +41,23 @@ pub mod util;
 pub mod opc;
 pub mod oxml;
 
-// Placeholder modules (for future expansion)
+// Public API
 pub mod api;
 pub mod types;
 pub mod shared;
 
-// Deprecated/stub modules (kept for compatibility)
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod chart {
-    //! Placeholder for chart functionality
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod dml {
-    //! Placeholder for drawing markup language
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod media {
-    //! Placeholder for media handling
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod package {
-    //! Placeholder for package handling
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod parts {
-    //! Placeholder for package parts
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod presentation {
-    //! Placeholder for presentation handling
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod shapes {
-    //! Placeholder for shape handling
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod slide {
-    //! Placeholder for slide handling
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod table {
-    //! Placeholder for table handling
-}
-
-#[deprecated(since = "0.1.0", note = "Use generator module instead")]
-pub mod text {
-    //! Placeholder for text handling
-}
-
-// Public API exports
+// Re-exports for convenience
 pub use api::Presentation;
-pub use generator::{create_pptx, create_pptx_with_content, SlideContent};
+pub use core::{ToXml, escape_xml};
+pub use exc::{PptxError, Result};
+pub use generator::{
+    create_pptx, create_pptx_with_content, SlideContent, SlideLayout,
+    TextFormat, FormattedText,
+    Table, TableRow, TableCell, TableBuilder,
+    Shape, ShapeType, ShapeFill, ShapeLine,
+    Image, ImageBuilder,
+    Chart, ChartType, ChartSeries, ChartBuilder,
+};
 pub use integration::{PresentationBuilder, SlideBuilder, PresentationMetadata};
-pub use exc::PptxError;
 
-pub const VERSION: &str = "1.0.2";
+pub const VERSION: &str = "1.0.3";

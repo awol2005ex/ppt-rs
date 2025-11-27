@@ -118,14 +118,14 @@ fn write_slides(
             for (i, slide) in slides.iter().enumerate() {
                 let slide_num = i + 1;
                 let slide_xml = create_slide_xml_with_content(slide_num, slide);
-                zip.start_file(&format!("ppt/slides/slide{}.xml", slide_num), *options)?;
+                zip.start_file(format!("ppt/slides/slide{slide_num}.xml"), *options)?;
                 zip.write_all(slide_xml.as_bytes())?;
             }
         }
         None => {
             for i in 1..=slide_count {
                 let slide_xml = create_slide_xml(i, "Presentation");
-                zip.start_file(&format!("ppt/slides/slide{}.xml", i), *options)?;
+                zip.start_file(format!("ppt/slides/slide{i}.xml"), *options)?;
                 zip.write_all(slide_xml.as_bytes())?;
             }
         }
@@ -141,7 +141,7 @@ fn write_slide_relationships(
 ) -> Result<(), Box<dyn std::error::Error>> {
     for i in 1..=slide_count {
         let slide_rels = create_slide_rels_xml();
-        zip.start_file(&format!("ppt/slides/_rels/slide{}.xml.rels", i), *options)?;
+        zip.start_file(format!("ppt/slides/_rels/slide{i}.xml.rels"), *options)?;
         zip.write_all(slide_rels.as_bytes())?;
     }
     Ok(())

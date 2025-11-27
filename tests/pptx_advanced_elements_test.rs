@@ -229,6 +229,7 @@ fn test_scatter_chart_data() {
 #[test]
 fn test_image_metadata() {
     // Image metadata structure for future implementation
+    #[allow(dead_code)]
     struct ImageMetadata {
         filename: String,
         width: u32,

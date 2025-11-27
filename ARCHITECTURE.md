@@ -5,35 +5,30 @@
 The PPTX library is organized into several layers that handle different aspects of PowerPoint file manipulation:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Public API (api.rs)                  │
-│              Presentation, Slide, Shape, etc.           │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    Public API (lib.rs)                      │
+│     Presentation, SlideContent, Table, Chart, Image         │
+└─────────────────────────────────────────────────────────────┘
                             ↓
-┌─────────────────────────────────────────────────────────┐
-│              Package Layer (package.rs)                 │
-│         Manages .pptx file as ZIP container             │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│              Core Traits (core/)                            │
+│         ToXml, Positioned, Styled, XmlWriter                │
+└─────────────────────────────────────────────────────────────┘
                             ↓
-┌─────────────────────────────────────────────────────────┐
-│              Parts Layer (parts/)                       │
-│    PresentationPart, SlidePart, SlideLayoutPart, etc.   │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│              Generator Layer (generator/)                   │
+│    SlideContent, Tables, Charts, Images, XML generation     │
+└─────────────────────────────────────────────────────────────┘
                             ↓
-┌─────────────────────────────────────────────────────────┐
-│              OXML Layer (oxml/)                         │
-│         XML Element manipulation and parsing            │
-└─────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────┐
-│              OPC Layer (opc/)                           │
-│         ZIP file handling and relationships             │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│              OPC Layer (opc/)                               │
+│         ZIP file handling and Package management            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Module Descriptions
 
-### API Layer (`api.rs`)
+### API Layer (`lib.rs`)
 - **Purpose**: Provide user-friendly functions for common tasks
 - **Key Functions**:
   - `presentation()` - Create or open a presentation

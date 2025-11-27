@@ -14,17 +14,12 @@ A Rust library for creating, reading, and updating PowerPoint 2007+ (.pptx) file
 
 ### Module Structure
 
-- **`api`** - Public API for creating and opening presentations
-- **`enums`** - Enumeration types for various PowerPoint settings
+- **`core`** - Core traits (`ToXml`, `Positioned`, `Styled`) and XML utilities
+- **`generator`** - PPTX generation with slides, tables, charts, images
+- **`api`** - High-level `Presentation` builder API
 - **`opc`** - Open Packaging Convention (ZIP) handling
-- **`oxml`** - Office XML element manipulation
-- **`parts`** - Package parts (slides, layouts, masters, etc.)
-- **`shapes`** - Shape manipulation
-- **`text`** - Text and paragraph handling
-- **`chart`** - Chart creation and manipulation
-- **`dml`** - Drawing Markup Language (colors, fills, lines, etc.)
-- **`util`** - Utility functions and length conversions
-- **`shared`** - Shared proxy classes
+- **`integration`** - High-level builders (`PresentationBuilder`, `SlideBuilder`)
+- **`cli`** - Command-line interface
 
 ## Building
 
