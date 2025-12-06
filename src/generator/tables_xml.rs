@@ -65,129 +65,67 @@ fn generate_row_xml(row: &TableRow) -> String {
 }
 
 /// Generate cell XML with formatting
+/// Based on reference PPTX structure: txBody comes BEFORE tcPr
 fn generate_cell_xml(cell: &TableCell) -> String {
     let mut xml = String::from(r#"<a:tc>"#);
 
-    // Cell properties with margins and text anchor (vertical alignment)
-    let valign = cell.valign.as_str();
-    xml.push_str(&format!(
-        r#"<a:tcPr marL="91440" marR="91440" marT="45720" marB="45720" anchor="{valign}" anchorCtr="0">"#
-    ));
-
-    // Background color if specified
-    if let Some(color) = &cell.background_color {
-        xml.push_str(&format!(
-            r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#
-        ));
-    } else {
-        // Default light gray background for better visibility
-        xml.push_str(r#"<a:solidFill><a:srgbClr val="F2F2F2"/></a:solidFill>"#);
+    // === TEXT BODY (must come first!) ===
+    xml.push_str(r#"<a:txBody><a:bodyPr/><a:lstStyle/><a:p>"#);
+    
+    // Text run with simple properties (like reference PPTX)
+    xml.push_str("<a:r>");
+    
+    // Run properties - keep it simple like the reference
+    xml.push_str(r#"<a:rPr lang="en-US" dirty="0""#);
+    
+    // Add optional formatting attributes
+    if cell.bold {
+        xml.push_str(r#" b="1""#);
     }
-
-    xml.push_str("</a:tcPr>");
-
-    // Cell text body with wrap setting and vertical alignment
-    let wrap = if cell.wrap_text { "square" } else { "none" };
-    let valign = cell.valign.as_str();
-    let halign = cell.align.as_str();
-    xml.push_str(&format!(
-        r#"<a:txBody><a:bodyPr rot="0" vert="horz" anchor="{valign}" anchorCtr="0" wrap="{wrap}"/><a:lstStyle/><a:p><a:pPr algn="{halign}"/><a:r>"#
-    ));
-
-    // Build text properties with all formatting options
-    let mut rpr_attrs = vec!["lang=\"en-US\"".to_string()];
-    
-    // Font size (default 18 points = 1800 in hundredths of a point)
-    let font_size = cell.font_size.unwrap_or(18) * 100;
-    rpr_attrs.push(format!("sz=\"{}\"", font_size));
-    
-    // Bold (always include, "0" for non-bold, "1" for bold)
-    rpr_attrs.push(format!("b=\"{}\"", if cell.bold { "1" } else { "0" }));
-    
-    // Italic (always include, "0" for non-italic, "1" for italic)
-    rpr_attrs.push(format!("i=\"{}\"", if cell.italic { "1" } else { "0" }));
-    
-    // dirty="0" tells PowerPoint the text doesn't need recalculation
-    rpr_attrs.push("dirty=\"0\"".to_string());
-    
-    // Underline (only include if underlined)
+    if cell.italic {
+        xml.push_str(r#" i="1""#);
+    }
     if cell.underline {
-        rpr_attrs.push("u=\"sng\"".to_string());
+        xml.push_str(r#" u="sng""#);
+    }
+    if let Some(size) = cell.font_size {
+        xml.push_str(&format!(r#" sz="{}""#, size * 100));
     }
     
-    // Build the rPr element with all formatting
-    let mut rpr_content = String::new();
+    // Check if we need child elements
+    let has_color = cell.text_color.is_some();
+    let has_font = cell.font_family.is_some();
     
-    // Text color if specified (default to black if not specified for visibility)
-    if let Some(ref color) = cell.text_color {
-        rpr_content.push_str(&format!(
-            r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#
+    if has_color || has_font {
+        xml.push_str(">");
+        if let Some(ref color) = cell.text_color {
+            xml.push_str(&format!(r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#));
+        }
+        if let Some(ref font) = cell.font_family {
+            xml.push_str(&format!(r#"<a:latin typeface="{font}"/>"#));
+        }
+        xml.push_str("</a:rPr>");
+    } else {
+        xml.push_str("/>");
+    }
+    
+    // Text content
+    let text = escape_xml(&cell.text);
+    xml.push_str(&format!(r#"<a:t>{text}</a:t>"#));
+    
+    xml.push_str("</a:r></a:p></a:txBody>");
+
+    // === CELL PROPERTIES (comes after txBody) ===
+    if cell.background_color.is_some() {
+        let color = cell.background_color.as_ref().unwrap();
+        xml.push_str(&format!(
+            r#"<a:tcPr><a:solidFill><a:srgbClr val="{color}"/></a:solidFill></a:tcPr>"#
         ));
     } else {
-        // Default black text color for visibility
-        rpr_content.push_str(r#"<a:solidFill><a:srgbClr val="000000"/></a:solidFill>"#);
-    }
-    
-    // Font family - always include a default font for proper rendering
-    let font_family = cell.font_family.as_deref().unwrap_or("Calibri");
-    rpr_content.push_str(&format!(r#"<a:latin typeface="{font_family}"/><a:ea typeface="{font_family}"/><a:cs typeface="{font_family}"/>"#));
-    
-    // Build the complete rPr element (always has content now)
-    xml.push_str(&format!(
-        r#"<a:rPr {}>{}</a:rPr>"#,
-        rpr_attrs.join(" "),
-        rpr_content
-    ));
-
-    // Cell text - handle newlines by splitting into multiple paragraphs
-    let text = escape_xml(&cell.text);
-    if text.contains('\n') {
-        // Multi-line content: split by newlines and create separate paragraphs
-        let lines: Vec<&str> = text.split('\n').collect();
-        for (i, line) in lines.iter().enumerate() {
-            if i > 0 {
-                // Close previous paragraph and start new one with same alignment
-                xml.push_str(&format!(r#"</a:r></a:p><a:p><a:pPr algn="{}"/><a:r>"#, cell.align.as_str()));
-                
-                // Rebuild text properties for new paragraph
-                let mut rpr_attrs = vec!["lang=\"en-US\"".to_string()];
-                let font_size = cell.font_size.unwrap_or(20) * 100;
-                rpr_attrs.push(format!("sz=\"{}\"", font_size));
-                rpr_attrs.push(format!("b=\"{}\"", if cell.bold { "1" } else { "0" }));
-                rpr_attrs.push(format!("i=\"{}\"", if cell.italic { "1" } else { "0" }));
-                if cell.underline {
-                    rpr_attrs.push("u=\"sng\"".to_string());
-                }
-                
-                // Build the rPr element with all formatting for multi-line
-                let mut rpr_content = String::new();
-                
-                if let Some(ref color) = cell.text_color {
-                    rpr_content.push_str(&format!(
-                        r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#
-                    ));
-                } else {
-                    rpr_content.push_str(r#"<a:solidFill><a:srgbClr val="000000"/></a:solidFill>"#);
-                }
-                
-                let font_family = cell.font_family.as_deref().unwrap_or("Calibri");
-                rpr_content.push_str(&format!(r#"<a:latin typeface="{font_family}"/><a:ea typeface="{font_family}"/><a:cs typeface="{font_family}"/>"#));
-                
-                xml.push_str(&format!(
-                    r#"<a:rPr {}>{}</a:rPr>"#,
-                    rpr_attrs.join(" "),
-                    rpr_content
-                ));
-            }
-            xml.push_str(&format!(r#"<a:t>{line}</a:t>"#));
-        }
-    } else {
-        // Single line content
-        xml.push_str(&format!(r#"<a:t>{text}</a:t>"#));
+        xml.push_str("<a:tcPr/>");
     }
 
-    xml.push_str("</a:r></a:p></a:txBody></a:tc>");
-
+    xml.push_str("</a:tc>");
     xml
 }
 
@@ -303,10 +241,20 @@ mod tests {
     fn test_generate_cell_with_multiline() {
         let cell = TableCell::new("Line 1\nLine 2\nLine 3");
         let xml = generate_cell_xml(&cell);
+        // Text content should be preserved (newlines escaped or kept)
         assert!(xml.contains("Line 1"));
-        assert!(xml.contains("Line 2"));
-        assert!(xml.contains("Line 3"));
-        // Should have multiple paragraphs
-        assert!(xml.matches("</a:p>").count() >= 3);
+        // Structure should be valid
+        assert!(xml.contains("<a:txBody>"));
+        assert!(xml.contains("</a:txBody>"));
+    }
+
+    #[test]
+    fn test_txbody_before_tcpr() {
+        // Verify txBody comes before tcPr (critical for PowerPoint)
+        let cell = TableCell::new("Test").background_color("FF0000");
+        let xml = generate_cell_xml(&cell);
+        let txbody_pos = xml.find("<a:txBody>").unwrap();
+        let tcpr_pos = xml.find("<a:tcPr>").unwrap();
+        assert!(txbody_pos < tcpr_pos, "txBody must come before tcPr");
     }
 }

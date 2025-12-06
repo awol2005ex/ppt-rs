@@ -353,15 +353,88 @@ let pptx_data = generator::create_pptx("My Presentation", 5)?;
 std::fs::write("presentation.pptx", pptx_data)?;
 ```
 
+## Table XML Structure
+
+Tables in PPTX follow a specific XML structure. The critical ordering is:
+
+```xml
+<a:tc>
+  <a:txBody>           <!-- TEXT BODY MUST COME FIRST -->
+    <a:bodyPr/>
+    <a:lstStyle/>
+    <a:p>
+      <a:r>
+        <a:rPr lang="en-US" dirty="0"/>
+        <a:t>Cell Text</a:t>
+      </a:r>
+    </a:p>
+  </a:txBody>
+  <a:tcPr/>            <!-- CELL PROPERTIES COME SECOND -->
+</a:tc>
+```
+
+**Key Points:**
+- `<a:txBody>` must come BEFORE `<a:tcPr>` (learned from reference PPTX analysis)
+- Simple `<a:rPr>` with minimal attributes works best
+- Optional formatting (bold, italic, color) added as attributes or child elements
+
+## Generator Module Structure
+
+```
+src/generator/
+├── mod.rs              # Module exports
+├── builder.rs          # PPTX creation functions
+├── xml.rs              # SlideContent, SlideLayout
+├── slide_xml.rs        # Slide XML generation
+├── slide_content.rs    # Slide content types
+├── package_xml.rs      # Package-level XML
+├── theme_xml.rs        # Theme XML
+├── props_xml.rs        # Properties XML
+├── notes_xml.rs        # Notes XML
+├── tables.rs           # Table types (legacy)
+├── tables_xml.rs       # Table XML generation
+├── table/              # Modular table module
+│   ├── mod.rs
+│   ├── cell.rs         # TableCell, CellAlign, CellVAlign
+│   ├── row.rs          # TableRow
+│   ├── builder.rs      # Table, TableBuilder
+│   └── xml.rs          # Table XML generation
+├── charts/             # Chart module
+├── shapes.rs           # Shape types
+├── shapes_xml.rs       # Shape XML generation
+├── images.rs           # Image types
+├── images_xml.rs       # Image XML generation
+├── text.rs             # Text formatting
+├── connectors.rs       # Connector shapes
+├── hyperlinks.rs       # Hyperlink support
+├── gradients.rs        # Gradient fills
+└── media.rs            # Video/audio
+```
+
+## Completed Features
+
+- [x] Complete OXML element implementations
+- [x] Full ZIP file handling
+- [x] XML serialization/deserialization
+- [x] Relationship management
+- [x] Part factory implementation
+- [x] Chart data handling (18+ chart types)
+- [x] Media embedding (video, audio)
+- [x] Theme support
+- [x] Master slide support
+- [x] Animation support (50+ effects)
+- [x] Transition support (27 effects)
+- [x] SmartArt support (25 layouts)
+- [x] 3D model support
+- [x] VBA macro support
+- [x] Custom XML support
+- [x] Table cell formatting and text rendering
+
 ## Future Enhancements
 
-- [ ] Complete OXML element implementations
-- [ ] Full ZIP file handling
-- [ ] XML serialization/deserialization
-- [ ] Relationship management
-- [ ] Part factory implementation
-- [ ] Chart data handling
-- [ ] Media embedding
-- [ ] Theme support
-- [ ] Master slide support
-- [ ] Animation support
+- [ ] RTL text support
+- [ ] Advanced table merging
+- [ ] Ink annotations
+- [ ] Comments and review features
+- [ ] Slide sections
+- [ ] Advanced master slide customization

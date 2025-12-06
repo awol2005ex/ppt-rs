@@ -2,16 +2,19 @@
 
 ## Recently Completed
 
+### Table Text Rendering Fix (v1.0.14)
+- [x] Fixed critical table cell text visibility issue
+- [x] Learned from reference PPTX that `<a:txBody>` must come BEFORE `<a:tcPr>`
+- [x] Simplified `<a:rPr>` structure to match PowerPoint's format
+- [x] XML structure now matches Microsoft PowerPoint output exactly
+- [x] All table tests passing
+
 ### Table Module Modularization (v1.0.13)
 - [x] Created modular `generator/table/` module structure:
   - `cell.rs` - TableCell with CellAlign, CellVAlign enums
   - `row.rs` - TableRow with height support
   - `builder.rs` - Table and TableBuilder
   - `xml.rs` - XML generation for OOXML tables
-- [x] Added proper text rendering in table cells:
-  - Font specification (latin, ea, cs) always included
-  - Default text color (black) for visibility
-  - dirty="0" attribute for proper rendering
 - [x] Added alignment support:
   - Horizontal: Left, Center, Right, Justify
   - Vertical: Top, Middle, Bottom

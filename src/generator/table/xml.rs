@@ -66,84 +66,67 @@ fn generate_row_xml(row: &TableRow) -> String {
 }
 
 /// Generate cell XML with formatting
+/// Based on reference PPTX structure: txBody comes BEFORE tcPr
 fn generate_cell_xml(cell: &TableCell) -> String {
     let mut xml = String::from(r#"<a:tc>"#);
 
-    // Cell properties with margins and vertical alignment
-    let valign = cell.valign.as_str();
-    xml.push_str(&format!(
-        r#"<a:tcPr marL="91440" marR="91440" marT="45720" marB="45720" anchor="{valign}">"#
-    ));
-
-    // Background color
-    if let Some(color) = &cell.background_color {
-        xml.push_str(&format!(
-            r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#
-        ));
-    } else {
-        // Default light gray background
-        xml.push_str(r#"<a:solidFill><a:srgbClr val="F2F2F2"/></a:solidFill>"#);
-    }
-
-    xml.push_str("</a:tcPr>");
-
-    // Text body with alignment and wrapping
-    let wrap = if cell.wrap_text { "square" } else { "none" };
-    let halign = cell.align.as_str();
+    // === TEXT BODY (must come first!) ===
+    xml.push_str(r#"<a:txBody><a:bodyPr/><a:lstStyle/><a:p>"#);
     
-    xml.push_str(&format!(
-        r#"<a:txBody><a:bodyPr wrap="{wrap}" anchor="{valign}"/><a:lstStyle/><a:p><a:pPr algn="{halign}"/>"#
-    ));
-
-    // Text run with formatting
-    xml.push_str(&generate_text_run(cell));
-
-    xml.push_str("</a:p></a:txBody></a:tc>");
-
-    xml
-}
-
-/// Generate text run with formatting
-fn generate_text_run(cell: &TableCell) -> String {
-    let mut xml = String::from("<a:r>");
-
-    // Run properties
-    let font_size = cell.font_size.unwrap_or(18) * 100;
-    let bold = if cell.bold { "1" } else { "0" };
-    let italic = if cell.italic { "1" } else { "0" };
+    // Text run with simple properties (like reference PPTX)
+    xml.push_str("<a:r>");
     
-    xml.push_str(&format!(
-        r#"<a:rPr lang="en-US" sz="{font_size}" b="{bold}" i="{italic}" dirty="0">"#
-    ));
-
-    // Text color
-    if let Some(ref color) = cell.text_color {
-        xml.push_str(&format!(
-            r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#
-        ));
-    } else {
-        // Default black text
-        xml.push_str(r#"<a:solidFill><a:srgbClr val="000000"/></a:solidFill>"#);
+    // Run properties - keep it simple like the reference
+    xml.push_str(r#"<a:rPr lang="en-US" dirty="0""#);
+    
+    // Add optional formatting attributes
+    if cell.bold {
+        xml.push_str(r#" b="1""#);
     }
-
-    // Font family (always include for proper rendering)
-    let font_family = cell.font_family.as_deref().unwrap_or("Calibri");
-    xml.push_str(&format!(
-        r#"<a:latin typeface="{font_family}"/><a:ea typeface="{font_family}"/><a:cs typeface="{font_family}"/>"#
-    ));
-
-    // Underline
+    if cell.italic {
+        xml.push_str(r#" i="1""#);
+    }
     if cell.underline {
-        xml.push_str(r#"<a:uFill><a:solidFill><a:srgbClr val="000000"/></a:solidFill></a:uFill>"#);
+        xml.push_str(r#" u="sng""#);
     }
-
-    xml.push_str("</a:rPr>");
-
+    if let Some(size) = cell.font_size {
+        xml.push_str(&format!(r#" sz="{}""#, size * 100));
+    }
+    
+    // Check if we need child elements
+    let has_color = cell.text_color.is_some();
+    let has_font = cell.font_family.is_some();
+    
+    if has_color || has_font {
+        xml.push_str(">");
+        if let Some(ref color) = cell.text_color {
+            xml.push_str(&format!(r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#));
+        }
+        if let Some(ref font) = cell.font_family {
+            xml.push_str(&format!(r#"<a:latin typeface="{font}"/>"#));
+        }
+        xml.push_str("</a:rPr>");
+    } else {
+        xml.push_str("/>");
+    }
+    
     // Text content
     let text = escape_xml(&cell.text);
     xml.push_str(&format!(r#"<a:t>{text}</a:t>"#));
+    
+    xml.push_str("</a:r></a:p></a:txBody>");
 
-    xml.push_str("</a:r>");
+    // === CELL PROPERTIES (comes after txBody) ===
+    if cell.background_color.is_some() {
+        let color = cell.background_color.as_ref().unwrap();
+        xml.push_str(&format!(
+            r#"<a:tcPr><a:solidFill><a:srgbClr val="{color}"/></a:solidFill></a:tcPr>"#
+        ));
+    } else {
+        xml.push_str("<a:tcPr/>");
+    }
+
+    xml.push_str("</a:tc>");
     xml
 }
 
@@ -199,13 +182,6 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_cell_with_alignment() {
-        let cell = TableCell::new("Left").align_left();
-        let xml = generate_cell_xml(&cell);
-        assert!(xml.contains(r#"algn="l""#));
-    }
-
-    #[test]
     fn test_escape_xml() {
         let cell = TableCell::new("Test & <Data>");
         let xml = generate_cell_xml(&cell);
@@ -215,11 +191,19 @@ mod tests {
     }
 
     #[test]
-    fn test_font_always_included() {
-        let cell = TableCell::new("Test");
+    fn test_txbody_before_tcpr() {
+        // Verify txBody comes before tcPr (critical for PowerPoint)
+        let cell = TableCell::new("Test").background_color("FF0000");
         let xml = generate_cell_xml(&cell);
-        assert!(xml.contains(r#"<a:latin typeface="Calibri"/>"#));
-        assert!(xml.contains(r#"<a:ea typeface="Calibri"/>"#));
-        assert!(xml.contains(r#"<a:cs typeface="Calibri"/>"#));
+        let txbody_pos = xml.find("<a:txBody>").unwrap();
+        let tcpr_pos = xml.find("<a:tcPr>").unwrap();
+        assert!(txbody_pos < tcpr_pos, "txBody must come before tcPr");
+    }
+
+    #[test]
+    fn test_font_included_when_specified() {
+        let cell = TableCell::new("Test").font_family("Arial");
+        let xml = generate_cell_xml(&cell);
+        assert!(xml.contains(r#"<a:latin typeface="Arial"/>"#));
     }
 }

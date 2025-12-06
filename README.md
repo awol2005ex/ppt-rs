@@ -181,15 +181,31 @@ ppt-rs = "0.1"
 ### Tables
 
 ```rust
-use ppt_rs::generator::{SlideContent, TableBuilder, create_pptx_with_content};
+use ppt_rs::generator::{SlideContent, TableBuilder, TableRow, TableCell, create_pptx_with_content};
 
+// Simple table
 let table = TableBuilder::new(vec![2000000, 2000000])
     .add_simple_row(vec!["Name", "Status"])
     .add_simple_row(vec!["Alice", "Active"])
     .build();
 
+// Styled table with formatting
+let styled_table = TableBuilder::new(vec![2000000, 2000000, 2000000])
+    .add_row(TableRow::new(vec![
+        TableCell::new("Header 1").bold().background_color("4472C4").text_color("FFFFFF"),
+        TableCell::new("Header 2").bold().background_color("4472C4").text_color("FFFFFF"),
+        TableCell::new("Header 3").bold().background_color("4472C4").text_color("FFFFFF"),
+    ]))
+    .add_row(TableRow::new(vec![
+        TableCell::new("Data 1"),
+        TableCell::new("Data 2").italic(),
+        TableCell::new("Data 3").text_color("2E7D32"),
+    ]))
+    .position(500000, 1500000)
+    .build();
+
 let slides = vec![
-    SlideContent::new("Data").table(table),
+    SlideContent::new("Data").table(styled_table),
 ];
 ```
 
@@ -224,7 +240,7 @@ Unlike other Rust PPTX crates that:
 
 `ppt-rs`:
 - ✅ Generates **valid PPTX files** from day one
-- ✅ **Actively maintained** with comprehensive test coverage (399+ tests)
+- ✅ **Actively maintained** with comprehensive test coverage (600+ tests)
 - ✅ **Complete XML structure** following ECMA-376 standard
 - ✅ **Validation tools** - Built-in validation command for quality assurance
 - ✅ **Alignment testing** - Framework for ensuring compatibility with python-pptx
@@ -234,7 +250,7 @@ Unlike other Rust PPTX crates that:
 
 ### Validation
 - Built-in validation command for ECMA-376 compliance checking
-- Comprehensive test suite (399+ tests)
+- Comprehensive test suite (600+ tests)
 - Integration tests for end-to-end validation
 
 ### Alignment Testing
@@ -248,7 +264,22 @@ Unlike other Rust PPTX crates that:
 - **Standard**: ECMA-376 Office Open XML
 - **Compatibility**: PowerPoint, LibreOffice, Google Slides, Keynote
 - **Architecture**: Layered design with clear separation of concerns
-- **Test Coverage**: 399+ tests covering all major features
+- **Test Coverage**: 610+ tests covering all major features
+
+## Advanced Features
+
+- **Tables**: Cell formatting, colors, alignment, borders
+- **Charts**: Bar, line, pie, area, scatter, doughnut, radar, and more
+- **Shapes**: 100+ shape types with fills, outlines, and text
+- **Animations**: 50+ animation effects (fade, fly, zoom, etc.)
+- **Transitions**: 27 slide transition effects
+- **SmartArt**: 25 SmartArt layouts (lists, processes, cycles)
+- **Media**: Video and audio embedding (mp4, webm, mp3, wav)
+- **3D Models**: GLB, GLTF, OBJ, FBX, STL formats
+- **VBA Macros**: Support for .pptm files with macros
+- **Custom XML**: Embed custom data in presentations
+- **Themes**: Color schemes and font definitions
+- **Speaker Notes**: Add notes to slides
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation.
 
