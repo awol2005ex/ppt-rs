@@ -53,8 +53,8 @@ pub fn highlight_code(code: &str, language: &str) -> Vec<Vec<HighlightedSegment>
         .or_else(|| ps.find_syntax_by_extension(language))
         .unwrap_or_else(|| ps.find_syntax_plain_text());
     
-    // Use InspiredGitHub theme for better contrast and visibility
-    let theme = &ts.themes["InspiredGitHub"];
+    // Use Solarized (dark) theme for vibrant syntax colors
+    let theme = &ts.themes["Solarized (dark)"];
     let mut highlighter = HighlightLines::new(syntax, theme);
     
     let mut lines = Vec::new();
@@ -89,8 +89,8 @@ pub fn generate_highlighted_code_xml(code: &str, language: &str) -> String {
         xml.push_str("<a:p><a:pPr algn=\"l\"/>");
         
         if line_segments.is_empty() {
-            // Empty line - use dark text on light background
-            xml.push_str(r#"<a:r><a:rPr lang="en-US" sz="1100" dirty="0"><a:latin typeface="Consolas"/><a:solidFill><a:srgbClr val="333333"/></a:solidFill></a:rPr><a:t> </a:t></a:r>"#);
+            // Empty line - use Solarized base0 color
+            xml.push_str(r#"<a:r><a:rPr lang="en-US" sz="1400" dirty="0"><a:latin typeface="Consolas"/><a:solidFill><a:srgbClr val="839496"/></a:solidFill></a:rPr><a:t> </a:t></a:r>"#);
         } else {
             for segment in line_segments {
                 let bold = if segment.bold { r#" b="1""# } else { "" };
@@ -98,7 +98,7 @@ pub fn generate_highlighted_code_xml(code: &str, language: &str) -> String {
                 let text = escape_xml(&segment.text);
                 
                 xml.push_str(&format!(
-                    r#"<a:r><a:rPr lang="en-US" sz="1100" dirty="0"{}{}><a:latin typeface="Consolas"/><a:solidFill><a:srgbClr val="{}"/></a:solidFill></a:rPr><a:t>{}</a:t></a:r>"#,
+                    r#"<a:r><a:rPr lang="en-US" sz="1400" dirty="0"{}{}><a:latin typeface="Consolas"/><a:solidFill><a:srgbClr val="{}"/></a:solidFill></a:rPr><a:t>{}</a:t></a:r>"#,
                     bold, italic, segment.color, text
                 ));
             }

@@ -2,12 +2,39 @@
 
 ## Recently Completed
 
+### Mermaid Diagram Rendering with Shapes (v1.0.17)
+- [x] **Flowchart diagrams** - Nodes, subgraphs, connectors
+- [x] **Sequence diagrams** - Participants, lifelines, messages
+- [x] **Pie charts** - Circle with color-coded legend
+- [x] **Gantt charts** - Sections, tasks with colored bars
+- [x] **Class diagrams** - Classes with attributes/methods, relationships
+- [x] **State diagrams** - States with transitions, start/end nodes
+- [x] **ER diagrams** - Entities with attributes, relationships
+- [x] **Mindmaps** - Radial layout with root and branches
+- [x] **Timelines** - Horizontal timeline with events
+- [x] All 9 diagram types fully rendered with shapes and connectors
+- [x] All tests passing
+
+### Code Modularization & Syntax Highlighting (v1.0.16)
+- [x] **Syntax highlighting with Solarized Dark theme**
+  - Vibrant colors: green (keywords), blue (functions), yellow (strings), cyan (special)
+  - Dark background (#002B36) with proper contrast
+  - Consolas monospace font (14pt)
+- [x] **Modularized cli/markdown module**
+  - `cli/markdown/mod.rs` - Module exports
+  - `cli/markdown/parser.rs` - Markdown parser state machine
+  - `cli/markdown/mermaid.rs` - Mermaid diagram parsing and shape generation
+- [x] **Modularized generator/slide module**
+  - `generator/slide/mod.rs` - Module exports
+  - `generator/slide/formatting.rs` - Text formatting utilities
+- [x] All 645 tests passing
+
 ### Enhanced md2ppt with Tables & More (v1.0.15)
 - [x] Added pulldown-cmark for proper markdown parsing
 - [x] Tables: GFM-style tables with header styling
 - [x] **Syntax-highlighted code blocks**: Using syntect library
   - Supports 25+ languages (Rust, Python, JavaScript, etc.)
-  - Base16 Ocean Dark theme colors
+  - Solarized Dark theme colors
   - Consolas monospace font
 - [x] **Mermaid diagrams**: 12 diagram types with visual placeholders
   - Flowchart, Sequence, Gantt, Class, State, ER
@@ -23,7 +50,7 @@
 - [x] Image placeholders: Images shown as placeholder shapes
 - [x] Subheadings: H2+ become bold bullet points
 - [x] Comprehensive demo: `examples/md2ppt_demo.md` (25 slides)
-- [x] All markdown tests passing (10 tests)
+- [x] All markdown tests passing (18 tests)
 - [x] Rich text parsing tests (8 tests)
 - [x] Syntax highlighting tests (4 tests)
 

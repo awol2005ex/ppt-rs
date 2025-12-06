@@ -41,6 +41,9 @@ pub mod charts;
 // Notes module for speaker notes
 pub mod notes_xml;
 
+// Slide utilities (formatting, etc.)
+pub mod slide;
+
 // New element modules
 pub mod connectors;
 pub mod hyperlinks;
