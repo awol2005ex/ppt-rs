@@ -1,6 +1,6 @@
 //! Comprehensive PPTX Element Showcase
 //!
-//! A focused demo showing ALL pptx-rs capabilities in just 10 slides:
+//! A focused demo showing ALL pptx-rs capabilities:
 //! 1. All 6 slide layouts
 //! 2. Text formatting (bold, italic, underline, colors, sizes)
 //! 3. Tables with cell styling
@@ -8,15 +8,44 @@
 //! 5. Shapes with fills
 //! 6. Images (placeholder)
 //! 7. Package reading/writing
+//! 8. NEW: Parts API (SlideLayout, SlideMaster, Theme, Notes, Media, etc.)
+//! 9. NEW: Elements API (Color, Position, Size, Transform)
 
 use ppt_rs::generator::{
     create_pptx_with_content, SlideContent, SlideLayout,
-    TableRow, TableCell, TableBuilder,
+    TableRow, TableCell, TableBuilder, CellAlign, CellVAlign,
     ChartType, ChartSeries, ChartBuilder,
     Shape, ShapeType, ShapeFill,
     Image,
 };
 use ppt_rs::opc::Package;
+use ppt_rs::parts::{
+    SlideLayoutPart, LayoutType,
+    SlideMasterPart,
+    ThemePart,
+    NotesSlidePart,
+    AppPropertiesPart,
+    MediaPart, MediaFormat,
+    TablePart, TableRowPart, TableCellPart,
+    HorizontalAlign, VerticalAlign,
+    ContentTypesPart,
+    Part,
+    // Advanced features
+    Animation, AnimationEffect, AnimationTrigger, AnimationDirection,
+    SlideTransition, TransitionEffect, SlideAnimations,
+    HandoutMasterPart, HandoutLayout,
+    CustomXmlPart,
+    VbaProjectPart, VbaModule,
+    EmbeddedFontCollection, FontEmbedType,
+    SmartArtPart, SmartArtLayout,
+    Model3DPart, Model3DFormat, CameraPreset,
+};
+use ppt_rs::elements::{
+    Color, RgbColor, SchemeColor,
+    Position, Size, Transform,
+    EMU_PER_INCH,
+};
+use ppt_rs::ToXml;
 use std::fs;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -238,6 +267,411 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // =========================================================================
+    // SLIDE 11: Advanced Table with Borders & Alignment (NEW)
+    // =========================================================================
+    println!("📊 Slide 11: Advanced Table (borders, alignment, merged cells)");
+    
+    // Build advanced table using generator's TableBuilder with alignment
+    let advanced_table = TableBuilder::new(vec![2000000, 2000000, 2000000, 2000000])
+        .add_row(TableRow::new(vec![
+            TableCell::new("Q1 2024 Financial Report").bold().background_color("1F4E79").text_color("FFFFFF").align_center().font_size(14),
+            TableCell::new("").background_color("1F4E79"),
+            TableCell::new("").background_color("1F4E79"),
+            TableCell::new("").background_color("1F4E79"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Category").bold().background_color("2E75B6").text_color("FFFFFF").align_center(),
+            TableCell::new("Revenue").bold().background_color("2E75B6").text_color("FFFFFF").align_center(),
+            TableCell::new("Expenses").bold().background_color("2E75B6").text_color("FFFFFF").align_center(),
+            TableCell::new("Profit").bold().background_color("2E75B6").text_color("FFFFFF").align_center(),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Product Sales").text_color("000000").align_left(),
+            TableCell::new("$1,250,000").text_color("2E7D32").align_right(),
+            TableCell::new("$450,000").text_color("C62828").align_right(),
+            TableCell::new("$800,000").bold().text_color("2E7D32").align_right(),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Services").text_color("000000").align_left(),
+            TableCell::new("$890,000").text_color("2E7D32").align_right(),
+            TableCell::new("$320,000").text_color("C62828").align_right(),
+            TableCell::new("$570,000").bold().text_color("2E7D32").align_right(),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Total").bold().background_color("E7E6E6").text_color("000000").align_left(),
+            TableCell::new("$2,140,000").bold().background_color("E7E6E6").text_color("000000").align_right(),
+            TableCell::new("$770,000").bold().background_color("E7E6E6").text_color("000000").align_right(),
+            TableCell::new("$1,370,000").bold().background_color("C6EFCE").text_color("006100").align_right(),
+        ]))
+        .position(300000, 1600000)
+        .build();
+    
+    slides.push(
+        SlideContent::new("Financial Report - Advanced Table")
+            .table(advanced_table)
+            .title_color("1F4E79")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 12: Comparison Matrix Table (NEW)
+    // =========================================================================
+    println!("📊 Slide 12: Comparison Matrix Table");
+    
+    let comparison_table = TableBuilder::new(vec![2000000, 1500000, 1500000, 1500000])
+        .add_row(TableRow::new(vec![
+            TableCell::new("Feature").bold().background_color("4472C4").text_color("FFFFFF"),
+            TableCell::new("Basic").bold().background_color("4472C4").text_color("FFFFFF"),
+            TableCell::new("Pro").bold().background_color("4472C4").text_color("FFFFFF"),
+            TableCell::new("Enterprise").bold().background_color("4472C4").text_color("FFFFFF"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Storage").text_color("000000"),
+            TableCell::new("5 GB").text_color("000000"),
+            TableCell::new("50 GB").text_color("000000"),
+            TableCell::new("Unlimited").bold().text_color("2E7D32"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Users").text_color("000000"),
+            TableCell::new("1").text_color("000000"),
+            TableCell::new("10").text_color("000000"),
+            TableCell::new("Unlimited").bold().text_color("2E7D32"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Support").text_color("000000"),
+            TableCell::new("Email").text_color("000000"),
+            TableCell::new("24/7 Chat").text_color("000000"),
+            TableCell::new("Dedicated").bold().text_color("2E7D32"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("API Access").text_color("000000"),
+            TableCell::new("No").text_color("C62828"),
+            TableCell::new("Yes").text_color("2E7D32"),
+            TableCell::new("Yes + Priority").bold().text_color("2E7D32"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Price/month").bold().background_color("F2F2F2").text_color("000000"),
+            TableCell::new("$9").bold().background_color("F2F2F2").text_color("000000"),
+            TableCell::new("$29").bold().background_color("F2F2F2").text_color("000000"),
+            TableCell::new("$99").bold().background_color("F2F2F2").text_color("000000"),
+        ]))
+        .position(500000, 1600000)
+        .build();
+    
+    slides.push(
+        SlideContent::new("Pricing Comparison Matrix")
+            .table(comparison_table)
+            .title_color("4472C4")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 13: Process Flow with Shapes (NEW - SmartArt-like)
+    // =========================================================================
+    println!("🔷 Slide 13: Process Flow (SmartArt-style)");
+    
+    // Create process flow using shapes
+    let step1 = Shape::new(ShapeType::RoundedRectangle, 300000, 2000000, 1400000, 800000)
+        .with_fill(ShapeFill::new("4472C4"))
+        .with_text("1. Research");
+    let arrow1 = Shape::new(ShapeType::RightArrow, 1800000, 2200000, 400000, 400000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let step2 = Shape::new(ShapeType::RoundedRectangle, 2300000, 2000000, 1400000, 800000)
+        .with_fill(ShapeFill::new("ED7D31"))
+        .with_text("2. Design");
+    let arrow2 = Shape::new(ShapeType::RightArrow, 3800000, 2200000, 400000, 400000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let step3 = Shape::new(ShapeType::RoundedRectangle, 4300000, 2000000, 1400000, 800000)
+        .with_fill(ShapeFill::new("70AD47"))
+        .with_text("3. Develop");
+    let arrow3 = Shape::new(ShapeType::RightArrow, 5800000, 2200000, 400000, 400000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let step4 = Shape::new(ShapeType::RoundedRectangle, 6300000, 2000000, 1400000, 800000)
+        .with_fill(ShapeFill::new("5B9BD5"))
+        .with_text("4. Deploy");
+    
+    slides.push(
+        SlideContent::new("Development Process Flow")
+            .add_shape(step1)
+            .add_shape(arrow1)
+            .add_shape(step2)
+            .add_shape(arrow2)
+            .add_shape(step3)
+            .add_shape(arrow3)
+            .add_shape(step4)
+            .title_color("1F497D")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 14: Organization Chart with Shapes (NEW)
+    // =========================================================================
+    println!("🔷 Slide 14: Organization Chart");
+    
+    // CEO at top
+    let ceo = Shape::new(ShapeType::RoundedRectangle, 3500000, 1400000, 2000000, 600000)
+        .with_fill(ShapeFill::new("1F4E79"))
+        .with_text("CEO");
+    
+    // Vertical line from CEO
+    let line1 = Shape::new(ShapeType::Rectangle, 4450000, 2000000, 100000, 400000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    
+    // Horizontal connector
+    let hline = Shape::new(ShapeType::Rectangle, 1950000, 2400000, 5100000, 50000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    
+    // CTO, CFO, COO
+    let cto = Shape::new(ShapeType::RoundedRectangle, 1000000, 2600000, 1800000, 500000)
+        .with_fill(ShapeFill::new("2E75B6"))
+        .with_text("CTO");
+    let cfo = Shape::new(ShapeType::RoundedRectangle, 3600000, 2600000, 1800000, 500000)
+        .with_fill(ShapeFill::new("2E75B6"))
+        .with_text("CFO");
+    let coo = Shape::new(ShapeType::RoundedRectangle, 6200000, 2600000, 1800000, 500000)
+        .with_fill(ShapeFill::new("2E75B6"))
+        .with_text("COO");
+    
+    // Vertical lines to departments
+    let vline1 = Shape::new(ShapeType::Rectangle, 1850000, 2450000, 50000, 150000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let vline2 = Shape::new(ShapeType::Rectangle, 4450000, 2450000, 50000, 150000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let vline3 = Shape::new(ShapeType::Rectangle, 7050000, 2450000, 50000, 150000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    
+    // Teams under CTO
+    let eng = Shape::new(ShapeType::Rectangle, 500000, 3300000, 1200000, 400000)
+        .with_fill(ShapeFill::new("BDD7EE"))
+        .with_text("Engineering");
+    let product = Shape::new(ShapeType::Rectangle, 1800000, 3300000, 1200000, 400000)
+        .with_fill(ShapeFill::new("BDD7EE"))
+        .with_text("Product");
+    
+    slides.push(
+        SlideContent::new("Organization Structure")
+            .add_shape(ceo)
+            .add_shape(line1)
+            .add_shape(hline)
+            .add_shape(cto)
+            .add_shape(cfo)
+            .add_shape(coo)
+            .add_shape(vline1)
+            .add_shape(vline2)
+            .add_shape(vline3)
+            .add_shape(eng)
+            .add_shape(product)
+            .title_color("1F4E79")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 15: PDCA Cycle Diagram (NEW)
+    // =========================================================================
+    println!("🔷 Slide 15: PDCA Cycle Diagram");
+    
+    // Four quadrants for PDCA
+    let plan = Shape::new(ShapeType::RoundedRectangle, 1500000, 1600000, 2500000, 1500000)
+        .with_fill(ShapeFill::new("4472C4"))
+        .with_text("PLAN\n\nDefine goals\nand strategy");
+    let do_box = Shape::new(ShapeType::RoundedRectangle, 4500000, 1600000, 2500000, 1500000)
+        .with_fill(ShapeFill::new("ED7D31"))
+        .with_text("DO\n\nImplement\nthe plan");
+    let check = Shape::new(ShapeType::RoundedRectangle, 4500000, 3300000, 2500000, 1500000)
+        .with_fill(ShapeFill::new("70AD47"))
+        .with_text("CHECK\n\nMeasure\nresults");
+    let act = Shape::new(ShapeType::RoundedRectangle, 1500000, 3300000, 2500000, 1500000)
+        .with_fill(ShapeFill::new("FFC000"))
+        .with_text("ACT\n\nAdjust and\nimprove");
+    
+    // Arrows between quadrants
+    let arr1 = Shape::new(ShapeType::RightArrow, 4100000, 2100000, 300000, 300000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let arr2 = Shape::new(ShapeType::DownArrow, 5600000, 3200000, 300000, 200000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let arr3 = Shape::new(ShapeType::LeftArrow, 4100000, 3800000, 300000, 300000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    let arr4 = Shape::new(ShapeType::UpArrow, 2600000, 3200000, 300000, 200000)
+        .with_fill(ShapeFill::new("A5A5A5"));
+    
+    slides.push(
+        SlideContent::new("PDCA Continuous Improvement Cycle")
+            .add_shape(plan)
+            .add_shape(do_box)
+            .add_shape(check)
+            .add_shape(act)
+            .add_shape(arr1)
+            .add_shape(arr2)
+            .add_shape(arr3)
+            .add_shape(arr4)
+            .title_color("1F497D")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 16: Pyramid Diagram (Maslow's Hierarchy) (NEW)
+    // =========================================================================
+    println!("🔷 Slide 16: Pyramid Diagram");
+    
+    // Build pyramid from bottom to top
+    let level5 = Shape::new(ShapeType::Trapezoid, 500000, 4000000, 8000000, 600000)
+        .with_fill(ShapeFill::new("C00000"))
+        .with_text("Physiological Needs - Food, Water, Shelter");
+    let level4 = Shape::new(ShapeType::Trapezoid, 1000000, 3400000, 7000000, 600000)
+        .with_fill(ShapeFill::new("ED7D31"))
+        .with_text("Safety Needs - Security, Stability");
+    let level3 = Shape::new(ShapeType::Trapezoid, 1500000, 2800000, 6000000, 600000)
+        .with_fill(ShapeFill::new("FFC000"))
+        .with_text("Love & Belonging - Relationships");
+    let level2 = Shape::new(ShapeType::Trapezoid, 2000000, 2200000, 5000000, 600000)
+        .with_fill(ShapeFill::new("70AD47"))
+        .with_text("Esteem - Achievement, Respect");
+    let level1 = Shape::new(ShapeType::Triangle, 2500000, 1500000, 4000000, 700000)
+        .with_fill(ShapeFill::new("4472C4"))
+        .with_text("Self-Actualization");
+    
+    slides.push(
+        SlideContent::new("Maslow's Hierarchy of Needs")
+            .add_shape(level5)
+            .add_shape(level4)
+            .add_shape(level3)
+            .add_shape(level2)
+            .add_shape(level1)
+            .title_color("1F497D")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 17: Venn Diagram (NEW)
+    // =========================================================================
+    println!("🔷 Slide 17: Venn Diagram");
+    
+    // Three overlapping circles
+    let circle1 = Shape::new(ShapeType::Ellipse, 1500000, 1800000, 3000000, 3000000)
+        .with_fill(ShapeFill::new("4472C4"))
+        .with_text("Skills");
+    let circle2 = Shape::new(ShapeType::Ellipse, 3500000, 1800000, 3000000, 3000000)
+        .with_fill(ShapeFill::new("ED7D31"))
+        .with_text("Passion");
+    let circle3 = Shape::new(ShapeType::Ellipse, 2500000, 3200000, 3000000, 3000000)
+        .with_fill(ShapeFill::new("70AD47"))
+        .with_text("Market Need");
+    
+    // Center label
+    let center = Shape::new(ShapeType::Ellipse, 3200000, 2800000, 1600000, 800000)
+        .with_fill(ShapeFill::new("FFFFFF"))
+        .with_text("IKIGAI");
+    
+    slides.push(
+        SlideContent::new("Finding Your Ikigai - Venn Diagram")
+            .add_shape(circle1)
+            .add_shape(circle2)
+            .add_shape(circle3)
+            .add_shape(center)
+            .title_color("1F497D")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 18: Timeline/Roadmap (NEW)
+    // =========================================================================
+    println!("📊 Slide 18: Project Timeline");
+    
+    let timeline_table = TableBuilder::new(vec![1500000, 1500000, 1500000, 1500000, 1500000])
+        .add_row(TableRow::new(vec![
+            TableCell::new("Q1 2024").bold().background_color("4472C4").text_color("FFFFFF"),
+            TableCell::new("Q2 2024").bold().background_color("4472C4").text_color("FFFFFF"),
+            TableCell::new("Q3 2024").bold().background_color("4472C4").text_color("FFFFFF"),
+            TableCell::new("Q4 2024").bold().background_color("4472C4").text_color("FFFFFF"),
+            TableCell::new("Q1 2025").bold().background_color("4472C4").text_color("FFFFFF"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("Research\n& Planning").background_color("BDD7EE").text_color("1F497D"),
+            TableCell::new("Design\nPhase").background_color("BDD7EE").text_color("1F497D"),
+            TableCell::new("Development\nSprint 1-3").background_color("C6EFCE").text_color("006100"),
+            TableCell::new("Testing\n& QA").background_color("FCE4D6").text_color("C65911"),
+            TableCell::new("Launch\n& Support").background_color("E2EFDA").text_color("375623"),
+        ]))
+        .add_row(TableRow::new(vec![
+            TableCell::new("✓ Complete").bold().text_color("2E7D32"),
+            TableCell::new("✓ Complete").bold().text_color("2E7D32"),
+            TableCell::new("In Progress").text_color("ED7D31"),
+            TableCell::new("Planned").text_color("7F7F7F"),
+            TableCell::new("Planned").text_color("7F7F7F"),
+        ]))
+        .position(300000, 2000000)
+        .build();
+    
+    slides.push(
+        SlideContent::new("Project Roadmap 2024-2025")
+            .table(timeline_table)
+            .title_color("1F497D")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 19: Dashboard Summary (NEW)
+    // =========================================================================
+    println!("🔷 Slide 19: Dashboard with KPIs");
+    
+    // KPI boxes
+    let kpi1 = Shape::new(ShapeType::RoundedRectangle, 300000, 1600000, 2000000, 1200000)
+        .with_fill(ShapeFill::new("4472C4"))
+        .with_text("Revenue\n\n$2.14M\n+15% YoY");
+    let kpi2 = Shape::new(ShapeType::RoundedRectangle, 2500000, 1600000, 2000000, 1200000)
+        .with_fill(ShapeFill::new("70AD47"))
+        .with_text("Customers\n\n12,450\n+22% YoY");
+    let kpi3 = Shape::new(ShapeType::RoundedRectangle, 4700000, 1600000, 2000000, 1200000)
+        .with_fill(ShapeFill::new("ED7D31"))
+        .with_text("NPS Score\n\n72\n+8 pts");
+    let kpi4 = Shape::new(ShapeType::RoundedRectangle, 6900000, 1600000, 2000000, 1200000)
+        .with_fill(ShapeFill::new("5B9BD5"))
+        .with_text("Retention\n\n94%\n+3% YoY");
+    
+    // Status indicators
+    let status1 = Shape::new(ShapeType::Ellipse, 1800000, 2600000, 300000, 300000)
+        .with_fill(ShapeFill::new("70AD47"));
+    let status2 = Shape::new(ShapeType::Ellipse, 4000000, 2600000, 300000, 300000)
+        .with_fill(ShapeFill::new("70AD47"));
+    let status3 = Shape::new(ShapeType::Ellipse, 6200000, 2600000, 300000, 300000)
+        .with_fill(ShapeFill::new("FFC000"));
+    let status4 = Shape::new(ShapeType::Ellipse, 8400000, 2600000, 300000, 300000)
+        .with_fill(ShapeFill::new("70AD47"));
+    
+    slides.push(
+        SlideContent::new("Executive Dashboard - Q1 2024")
+            .add_shape(kpi1)
+            .add_shape(kpi2)
+            .add_shape(kpi3)
+            .add_shape(kpi4)
+            .add_shape(status1)
+            .add_shape(status2)
+            .add_shape(status3)
+            .add_shape(status4)
+            .title_color("1F497D")
+            .title_bold(true)
+    );
+
+    // =========================================================================
+    // SLIDE 20: Summary Slide (NEW)
+    // =========================================================================
+    println!("📝 Slide 20: Summary with Speaker Notes");
+    
+    slides.push(
+        SlideContent::new("Summary & Next Steps")
+            .layout(SlideLayout::TitleAndContent)
+            .title_color("1F497D")
+            .title_bold(true)
+            .add_bullet("Completed: Research, Design, Initial Development")
+            .add_bullet("In Progress: Sprint 3 Development")
+            .add_bullet("Next: QA Testing Phase (Q4 2024)")
+            .add_bullet("Launch Target: Q1 2025")
+            .add_bullet("Key Risks: Resource constraints, Timeline pressure")
+            .content_size(24)
+            .notes("Speaker Notes:\n\n1. Emphasize the progress made\n2. Highlight key achievements\n3. Address any concerns about timeline\n4. Open for Q&A")
+    );
+
+    // =========================================================================
     // Generate PPTX
     // =========================================================================
     println!("\n📦 Generating PPTX...");
@@ -261,6 +695,503 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   ├── Total parts: {}", package.part_count());
     println!("   ├── Slides: {}", slide_count);
     println!("   └── Package opened and analyzed successfully");
+
+    // =========================================================================
+    // NEW: Parts API Demonstration
+    // =========================================================================
+    println!("\n🧩 Parts API Demonstration:");
+    
+    // SlideLayoutPart - 11 layout types
+    println!("   ┌── SlideLayoutPart (11 layout types):");
+    let layouts = [
+        LayoutType::Title,
+        LayoutType::TitleAndContent,
+        LayoutType::SectionHeader,
+        LayoutType::TwoContent,
+        LayoutType::Comparison,
+        LayoutType::TitleOnly,
+        LayoutType::Blank,
+        LayoutType::ContentWithCaption,
+        LayoutType::PictureWithCaption,
+        LayoutType::TitleAndVerticalText,
+        LayoutType::VerticalTitleAndText,
+    ];
+    for (i, layout_type) in layouts.iter().enumerate() {
+        let layout = SlideLayoutPart::new(i + 1, *layout_type);
+        if i < 3 {
+            println!("   │   ├── {}: {} ({})", i + 1, layout_type.name(), layout.path());
+        }
+    }
+    println!("   │   └── ... and {} more layout types", layouts.len() - 3);
+    
+    // SlideMasterPart
+    println!("   ├── SlideMasterPart:");
+    let mut master = SlideMasterPart::new(1);
+    master.set_name("Custom Master");
+    master.add_layout_rel_id("rId2");
+    master.add_layout_rel_id("rId3");
+    println!("   │   ├── Name: {}", master.name());
+    println!("   │   ├── Path: {}", master.path());
+    println!("   │   └── Layouts: {} linked", master.layout_rel_ids().len());
+    
+    // ThemePart - Colors and Fonts
+    println!("   ├── ThemePart (colors & fonts):");
+    let mut theme = ThemePart::new(1);
+    theme.set_name("Corporate Theme");
+    theme.set_major_font("Arial");
+    theme.set_minor_font("Calibri");
+    theme.set_color("accent1", "FF5733");
+    theme.set_color("accent2", "33FF57");
+    let theme_xml = theme.to_xml()?;
+    println!("   │   ├── Name: {}", theme.name());
+    println!("   │   ├── Major Font: Arial");
+    println!("   │   ├── Minor Font: Calibri");
+    println!("   │   └── XML size: {} bytes", theme_xml.len());
+    
+    // NotesSlidePart - Speaker notes
+    println!("   ├── NotesSlidePart (speaker notes):");
+    let notes = NotesSlidePart::with_text(1, "Remember to:\n- Introduce yourself\n- Explain the agenda\n- Ask for questions");
+    let notes_xml = notes.to_xml()?;
+    println!("   │   ├── Path: {}", notes.path());
+    println!("   │   ├── Text: \"{}...\"", &notes.notes_text()[..20.min(notes.notes_text().len())]);
+    println!("   │   └── XML size: {} bytes", notes_xml.len());
+    
+    // AppPropertiesPart - Application metadata
+    println!("   ├── AppPropertiesPart (metadata):");
+    let mut app_props = AppPropertiesPart::new();
+    app_props.set_company("Acme Corporation");
+    app_props.set_slides(slides.len() as u32);
+    let app_xml = app_props.to_xml()?;
+    println!("   │   ├── Company: Acme Corporation");
+    println!("   │   ├── Slides: {}", slides.len());
+    println!("   │   └── XML size: {} bytes", app_xml.len());
+    
+    // MediaPart - Video/Audio formats
+    println!("   ├── MediaPart (10 media formats):");
+    println!("   │   ├── Video: mp4, webm, avi, wmv, mov");
+    println!("   │   ├── Audio: mp3, wav, wma, m4a, ogg");
+    let sample_media = MediaPart::new(1, MediaFormat::Mp4, vec![0; 100]);
+    println!("   │   └── Sample: {} ({})", sample_media.path(), sample_media.format().mime_type());
+    
+    // TablePart - Table with formatting
+    println!("   ├── TablePart (cell formatting):");
+    let table_part = TablePart::new()
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Header 1").bold().background("4472C4"),
+            TableCellPart::new("Header 2").bold().background("4472C4"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Data 1").color("333333"),
+            TableCellPart::new("Data 2").italic(),
+        ]))
+        .position(EMU_PER_INCH, EMU_PER_INCH * 2)
+        .size(EMU_PER_INCH * 6, EMU_PER_INCH * 2);
+    let table_xml = table_part.to_slide_xml(10);
+    println!("   │   ├── Rows: {}", table_part.rows.len());
+    println!("   │   ├── Features: bold, italic, colors, backgrounds");
+    println!("   │   └── XML size: {} bytes", table_xml.len());
+    
+    // ContentTypesPart
+    println!("   └── ContentTypesPart:");
+    let mut content_types = ContentTypesPart::new();
+    content_types.add_presentation();
+    content_types.add_slide(1);
+    content_types.add_slide_layout(1);
+    content_types.add_slide_master(1);
+    content_types.add_theme(1);
+    content_types.add_core_properties();
+    content_types.add_app_properties();
+    let ct_xml = content_types.to_xml()?;
+    println!("       ├── Path: {}", content_types.path());
+    println!("       └── XML size: {} bytes", ct_xml.len());
+
+    // =========================================================================
+    // NEW: Elements API Demonstration
+    // =========================================================================
+    println!("\n🎨 Elements API Demonstration:");
+    
+    // Color types
+    println!("   ┌── Color Types:");
+    let rgb = RgbColor::new(255, 87, 51);
+    let rgb_hex = RgbColor::from_hex("#4472C4").unwrap();
+    let scheme = SchemeColor::Accent1;
+    let color = Color::rgb(100, 149, 237);
+    println!("   │   ├── RgbColor::new(255, 87, 51) → {}", rgb.to_hex());
+    println!("   │   ├── RgbColor::from_hex(\"#4472C4\") → {}", rgb_hex.to_hex());
+    println!("   │   ├── SchemeColor::Accent1 → {}", scheme.as_str());
+    println!("   │   └── Color::rgb(100, 149, 237) → XML: {}", color.to_xml().chars().take(30).collect::<String>());
+    
+    // Position and Size
+    println!("   ├── Position & Size (EMU units):");
+    let pos = Position::from_inches(1.0, 2.0);
+    let size = Size::from_inches(4.0, 3.0);
+    println!("   │   ├── Position::from_inches(1.0, 2.0) → x={}, y={}", pos.x, pos.y);
+    println!("   │   ├── Size::from_inches(4.0, 3.0) → w={}, h={}", size.width, size.height);
+    println!("   │   └── EMU_PER_INCH = {}", EMU_PER_INCH);
+    
+    // Transform
+    println!("   └── Transform (position + size + rotation):");
+    let transform = Transform::from_inches(1.0, 1.5, 3.0, 2.0).with_rotation(45.0);
+    let transform_xml = transform.to_xml();
+    println!("       ├── Transform::from_inches(1.0, 1.5, 3.0, 2.0)");
+    println!("       ├── .with_rotation(45.0)");
+    println!("       └── XML: {}...", &transform_xml[..50.min(transform_xml.len())]);
+
+    // =========================================================================
+    // NEW: Advanced Features Demonstration
+    // =========================================================================
+    println!("\n🚀 Advanced Features Demonstration:");
+
+    // -------------------------------------------------------------------------
+    // Complex Table Examples
+    // -------------------------------------------------------------------------
+    println!("   ┌── Complex Table Examples:");
+    
+    // Example 1: Financial Report Table
+    println!("   │   ┌── Financial Report Table (5x4 with formatting):");
+    let financial_table = TablePart::new()
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Q1 2024 Financial Summary")
+                .col_span(4)
+                .bold()
+                .center()
+                .background("1F4E79")
+                .color("FFFFFF")
+                .font_size(14)
+                .font("Arial Black"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Category").bold().center().background("2E75B6").color("FFFFFF"),
+            TableCellPart::new("Revenue").bold().center().background("2E75B6").color("FFFFFF"),
+            TableCellPart::new("Expenses").bold().center().background("2E75B6").color("FFFFFF"),
+            TableCellPart::new("Profit").bold().center().background("2E75B6").color("FFFFFF"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Product Sales").align(HorizontalAlign::Left),
+            TableCellPart::new("$1,250,000").align(HorizontalAlign::Right).color("2E7D32"),
+            TableCellPart::new("$450,000").align(HorizontalAlign::Right).color("C62828"),
+            TableCellPart::new("$800,000").align(HorizontalAlign::Right).bold().color("2E7D32"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Services").align(HorizontalAlign::Left),
+            TableCellPart::new("$890,000").align(HorizontalAlign::Right).color("2E7D32"),
+            TableCellPart::new("$320,000").align(HorizontalAlign::Right).color("C62828"),
+            TableCellPart::new("$570,000").align(HorizontalAlign::Right).bold().color("2E7D32"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Total").bold().background("E7E6E6"),
+            TableCellPart::new("$2,140,000").bold().align(HorizontalAlign::Right).background("E7E6E6"),
+            TableCellPart::new("$770,000").bold().align(HorizontalAlign::Right).background("E7E6E6"),
+            TableCellPart::new("$1,370,000").bold().align(HorizontalAlign::Right).background("C6EFCE").color("006100"),
+        ]))
+        .position(EMU_PER_INCH / 2, EMU_PER_INCH * 2)
+        .size(EMU_PER_INCH * 8, EMU_PER_INCH * 3);
+    let fin_xml = financial_table.to_slide_xml(100);
+    println!("   │   │   ├── Merged header spanning 4 columns");
+    println!("   │   │   ├── Color-coded values (green=positive, red=negative)");
+    println!("   │   │   ├── Custom fonts and sizes");
+    println!("   │   │   └── XML: {} bytes", fin_xml.len());
+
+    // Example 2: Comparison Matrix
+    println!("   │   ├── Comparison Matrix (features vs products):");
+    let matrix_table = TablePart::new()
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Feature").bold().center().background("4472C4").color("FFFFFF"),
+            TableCellPart::new("Basic").bold().center().background("4472C4").color("FFFFFF"),
+            TableCellPart::new("Pro").bold().center().background("4472C4").color("FFFFFF"),
+            TableCellPart::new("Enterprise").bold().center().background("4472C4").color("FFFFFF"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Storage").align(HorizontalAlign::Left),
+            TableCellPart::new("5 GB").center(),
+            TableCellPart::new("50 GB").center(),
+            TableCellPart::new("Unlimited").center().bold().color("2E7D32"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Users").align(HorizontalAlign::Left),
+            TableCellPart::new("1").center(),
+            TableCellPart::new("10").center(),
+            TableCellPart::new("Unlimited").center().bold().color("2E7D32"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Support").align(HorizontalAlign::Left),
+            TableCellPart::new("Email").center(),
+            TableCellPart::new("24/7 Chat").center(),
+            TableCellPart::new("Dedicated").center().bold().color("2E7D32"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Price/mo").bold().background("F2F2F2"),
+            TableCellPart::new("$9").center().bold().background("F2F2F2"),
+            TableCellPart::new("$29").center().bold().background("F2F2F2"),
+            TableCellPart::new("$99").center().bold().background("F2F2F2"),
+        ]));
+    println!("   │   │   └── 5x4 matrix with alternating styles");
+
+    // Example 3: Schedule/Timeline Table
+    println!("   │   └── Schedule Table (with row spans):");
+    let schedule_table = TablePart::new()
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("Time").bold().center().background("70AD47").color("FFFFFF"),
+            TableCellPart::new("Monday").bold().center().background("70AD47").color("FFFFFF"),
+            TableCellPart::new("Tuesday").bold().center().background("70AD47").color("FFFFFF"),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("9:00 AM").center().background("E2EFDA"),
+            TableCellPart::new("Team Standup").center().row_span(2).valign(VerticalAlign::Middle).background("BDD7EE"),
+            TableCellPart::new("Code Review").center(),
+        ]))
+        .add_row(TableRowPart::new(vec![
+            TableCellPart::new("10:00 AM").center().background("E2EFDA"),
+            TableCellPart::merged(),
+            TableCellPart::new("Sprint Planning").center().background("FCE4D6"),
+        ]));
+    println!("   │       └── Row spans for multi-hour events");
+
+    // -------------------------------------------------------------------------
+    // Complex Animation Sequences
+    // -------------------------------------------------------------------------
+    println!("   ├── Complex Animation Sequences:");
+    
+    // Sequence 1: Title entrance with staggered content
+    println!("   │   ┌── Staggered Entrance Sequence:");
+    let title_anim = Animation::new(2, AnimationEffect::Fade)
+        .trigger(AnimationTrigger::OnClick)
+        .duration(500);
+    let content1 = Animation::new(3, AnimationEffect::FlyIn)
+        .trigger(AnimationTrigger::AfterPrevious)
+        .direction(AnimationDirection::Left)
+        .duration(400)
+        .delay(200);
+    let content2 = Animation::new(4, AnimationEffect::FlyIn)
+        .trigger(AnimationTrigger::AfterPrevious)
+        .direction(AnimationDirection::Left)
+        .duration(400)
+        .delay(100);
+    let content3 = Animation::new(5, AnimationEffect::FlyIn)
+        .trigger(AnimationTrigger::AfterPrevious)
+        .direction(AnimationDirection::Left)
+        .duration(400)
+        .delay(100);
+    let staggered = SlideAnimations::new()
+        .add(title_anim)
+        .add(content1)
+        .add(content2)
+        .add(content3)
+        .transition(SlideTransition::new(TransitionEffect::Push).direction(AnimationDirection::Left).duration(750));
+    let staggered_xml = staggered.to_timing_xml()?;
+    println!("   │   │   ├── Title: Fade on click");
+    println!("   │   │   ├── Content 1-3: FlyIn with 100ms stagger");
+    println!("   │   │   ├── Transition: Push from left (750ms)");
+    println!("   │   │   └── XML: {} bytes", staggered_xml.len());
+
+    // Sequence 2: Emphasis and exit
+    println!("   │   ├── Emphasis + Exit Sequence:");
+    let emphasis = Animation::new(6, AnimationEffect::Pulse)
+        .trigger(AnimationTrigger::OnClick)
+        .duration(1000)
+        .repeat(3);
+    let exit = Animation::new(6, AnimationEffect::FadeOut)
+        .trigger(AnimationTrigger::AfterPrevious)
+        .duration(500);
+    let emphasis_seq = SlideAnimations::new()
+        .add(emphasis)
+        .add(exit);
+    println!("   │   │   ├── Pulse 3x on click, then fade out");
+    println!("   │   │   └── Same shape, sequential effects");
+
+    // Sequence 3: Motion path
+    println!("   │   └── Motion Path Animation:");
+    let motion = Animation::new(7, AnimationEffect::Lines)
+        .trigger(AnimationTrigger::OnClick)
+        .duration(2000);
+    println!("   │       └── Custom path: Lines, Arcs, Turns, Loops");
+
+    // -------------------------------------------------------------------------
+    // SmartArt Combinations
+    // -------------------------------------------------------------------------
+    println!("   ├── SmartArt Layout Examples:");
+    
+    // Process flow
+    println!("   │   ┌── Process Flow (5 steps):");
+    let process = SmartArtPart::new(1, SmartArtLayout::BasicProcess)
+        .add_items(vec!["Research", "Design", "Develop", "Test", "Deploy"])
+        .position(EMU_PER_INCH / 2, EMU_PER_INCH * 2)
+        .size(EMU_PER_INCH * 8, EMU_PER_INCH * 2);
+    println!("   │   │   └── {} nodes in horizontal flow", process.nodes().len());
+
+    // Organization chart
+    println!("   │   ├── Organization Chart:");
+    let org = SmartArtPart::new(2, SmartArtLayout::OrgChart)
+        .add_items(vec!["CEO", "CTO", "CFO", "VP Engineering", "VP Sales"]);
+    println!("   │   │   └── Hierarchical structure with {} positions", org.nodes().len());
+
+    // Cycle diagram
+    println!("   │   ├── Cycle Diagram:");
+    let cycle = SmartArtPart::new(3, SmartArtLayout::BasicCycle)
+        .add_items(vec!["Plan", "Do", "Check", "Act"]);
+    println!("   │   │   └── PDCA cycle with {} phases", cycle.nodes().len());
+
+    // Venn diagram
+    println!("   │   ├── Venn Diagram:");
+    let venn = SmartArtPart::new(4, SmartArtLayout::BasicVenn)
+        .add_items(vec!["Skills", "Passion", "Market Need"]);
+    println!("   │   │   └── 3-circle Venn for Ikigai concept");
+
+    // Pyramid
+    println!("   │   └── Pyramid:");
+    let pyramid = SmartArtPart::new(5, SmartArtLayout::BasicPyramid)
+        .add_items(vec!["Self-Actualization", "Esteem", "Love/Belonging", "Safety", "Physiological"]);
+    println!("   │       └── Maslow's hierarchy with {} levels", pyramid.nodes().len());
+
+    // -------------------------------------------------------------------------
+    // 3D Model Configurations
+    // -------------------------------------------------------------------------
+    println!("   ├── 3D Model Configurations:");
+    
+    // Product showcase
+    println!("   │   ┌── Product Showcase:");
+    let product_3d = Model3DPart::new(1, Model3DFormat::Glb, vec![0; 100])
+        .camera(CameraPreset::IsometricTopUp)
+        .rotation(0.0, 45.0, 0.0)
+        .zoom(1.2)
+        .position(EMU_PER_INCH * 2, EMU_PER_INCH * 2)
+        .size(EMU_PER_INCH * 4, EMU_PER_INCH * 4);
+    println!("   │   │   ├── Camera: Isometric top-up view");
+    println!("   │   │   ├── Rotation: 45° Y-axis for best angle");
+    println!("   │   │   └── Zoom: 1.2x for detail");
+
+    // Architectural model
+    println!("   │   ├── Architectural Model:");
+    let arch_3d = Model3DPart::new(2, Model3DFormat::Gltf, vec![0; 100])
+        .camera(CameraPreset::Front)
+        .rotation(15.0, -30.0, 0.0)
+        .ambient_light("FFFFCC");
+    println!("   │   │   ├── Camera: Front view with tilt");
+    println!("   │   │   └── Ambient: Warm lighting (FFFFCC)");
+
+    // Technical diagram
+    println!("   │   └── Technical Diagram:");
+    let tech_3d = Model3DPart::new(3, Model3DFormat::Obj, vec![0; 100])
+        .camera(CameraPreset::IsometricOffAxis1Top)
+        .rotation(0.0, 0.0, 0.0);
+    println!("   │       └── Camera: Off-axis isometric for exploded view");
+
+    // -------------------------------------------------------------------------
+    // Theme + Master + Layout Combination
+    // -------------------------------------------------------------------------
+    println!("   ├── Theme + Master + Layout Integration:");
+    
+    // Corporate theme
+    let mut corp_theme = ThemePart::new(1);
+    corp_theme.set_name("Corporate Blue");
+    corp_theme.set_major_font("Segoe UI");
+    corp_theme.set_minor_font("Segoe UI Light");
+    corp_theme.set_color("dk1", "000000");
+    corp_theme.set_color("lt1", "FFFFFF");
+    corp_theme.set_color("dk2", "1F497D");
+    corp_theme.set_color("lt2", "EEECE1");
+    corp_theme.set_color("accent1", "4472C4");
+    corp_theme.set_color("accent2", "ED7D31");
+    corp_theme.set_color("accent3", "A5A5A5");
+    corp_theme.set_color("accent4", "FFC000");
+    corp_theme.set_color("accent5", "5B9BD5");
+    corp_theme.set_color("accent6", "70AD47");
+    let theme_xml = corp_theme.to_xml()?;
+    println!("   │   ├── Theme: Corporate Blue");
+    println!("   │   │   ├── Fonts: Segoe UI / Segoe UI Light");
+    println!("   │   │   ├── 12 color slots defined");
+    println!("   │   │   └── XML: {} bytes", theme_xml.len());
+
+    // Master with multiple layouts
+    let mut corp_master = SlideMasterPart::new(1);
+    corp_master.set_name("Corporate Master");
+    corp_master.add_layout_rel_id("rId2"); // Title
+    corp_master.add_layout_rel_id("rId3"); // Title + Content
+    corp_master.add_layout_rel_id("rId4"); // Section Header
+    corp_master.add_layout_rel_id("rId5"); // Two Content
+    corp_master.add_layout_rel_id("rId6"); // Comparison
+    corp_master.add_layout_rel_id("rId7"); // Title Only
+    corp_master.add_layout_rel_id("rId8"); // Blank
+    println!("   │   └── Master: {} with {} layouts linked", corp_master.name(), corp_master.layout_rel_ids().len());
+
+    // -------------------------------------------------------------------------
+    // VBA + Custom XML Integration
+    // -------------------------------------------------------------------------
+    println!("   ├── VBA + Custom XML Integration:");
+    
+    // VBA with multiple modules
+    let vba_project = VbaProjectPart::new()
+        .add_module(VbaModule::new("AutoRun", r#"
+Sub Auto_Open()
+    MsgBox "Welcome to the presentation!"
+End Sub
+
+Sub NavigateToSlide(slideNum As Integer)
+    SlideShowWindows(1).View.GotoSlide slideNum
+End Sub
+"#))
+        .add_module(VbaModule::new("DataHelpers", r#"
+Function GetCustomData(key As String) As String
+    ' Read from Custom XML part
+    GetCustomData = ActivePresentation.CustomXMLParts(1).SelectSingleNode("//" & key).Text
+End Function
+"#))
+        .add_module(VbaModule::class("SlideController", r#"
+Private currentSlide As Integer
+
+Public Sub NextSlide()
+    currentSlide = currentSlide + 1
+    NavigateToSlide currentSlide
+End Sub
+"#));
+    println!("   │   ├── VBA Project:");
+    println!("   │   │   ├── AutoRun: Auto_Open, NavigateToSlide");
+    println!("   │   │   ├── DataHelpers: GetCustomData (reads Custom XML)");
+    println!("   │   │   └── SlideController: Class for navigation");
+
+    // Custom XML with structured data
+    let app_config = CustomXmlPart::new(1, "presentationConfig")
+        .namespace("http://company.com/pptx/config")
+        .property("version", "2.1.0")
+        .property("author", "Demo User")
+        .property("department", "Engineering")
+        .property("confidentiality", "Internal")
+        .property("lastModified", "2024-01-15T10:30:00Z");
+    let config_xml = app_config.to_xml()?;
+    println!("   │   └── Custom XML:");
+    println!("   │       ├── Namespace: http://company.com/pptx/config");
+    println!("   │       ├── Properties: version, author, department, etc.");
+    println!("   │       └── XML: {} bytes", config_xml.len());
+
+    // -------------------------------------------------------------------------
+    // Embedded Fonts with Variants
+    // -------------------------------------------------------------------------
+    println!("   ├── Embedded Font Collection:");
+    let mut font_collection = EmbeddedFontCollection::new();
+    font_collection.add("Corporate Sans", vec![0; 1000]);
+    font_collection.add_with_type("Corporate Sans", vec![0; 1000], FontEmbedType::Bold);
+    font_collection.add_with_type("Corporate Sans", vec![0; 1000], FontEmbedType::Italic);
+    font_collection.add_with_type("Corporate Sans", vec![0; 1000], FontEmbedType::BoldItalic);
+    font_collection.add("Code Mono", vec![0; 800]);
+    let fonts_xml = font_collection.to_xml();
+    println!("   │   ├── Corporate Sans: Regular, Bold, Italic, BoldItalic");
+    println!("   │   ├── Code Mono: Regular");
+    println!("   │   ├── Total: {} font files", font_collection.len());
+    println!("   │   └── XML: {} bytes", fonts_xml.len());
+
+    // -------------------------------------------------------------------------
+    // Handout with Full Configuration
+    // -------------------------------------------------------------------------
+    println!("   └── Handout Master Configuration:");
+    let handout = HandoutMasterPart::new()
+        .layout(HandoutLayout::SlidesPerPage6)
+        .header("Q1 2024 Strategy Review")
+        .footer("Confidential - Internal Use Only");
+    let handout_xml = handout.to_xml()?;
+    println!("       ├── Layout: 6 slides per page");
+    println!("       ├── Header: Q1 2024 Strategy Review");
+    println!("       ├── Footer: Confidential - Internal Use Only");
+    println!("       └── XML: {} bytes", handout_xml.len());
 
     // =========================================================================
     // Summary
@@ -294,6 +1225,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("╠══════════════════════════════════════════════════════════════╣");
     println!("║  PACKAGE:                                                    ║");
     println!("║    ✓ Create PPTX     ✓ Read PPTX      ✓ Analyze contents     ║");
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    println!("║  PARTS API (NEW):                                            ║");
+    println!("║    ✓ SlideLayoutPart (11 types)  ✓ SlideMasterPart           ║");
+    println!("║    ✓ ThemePart (colors/fonts)    ✓ NotesSlidePart            ║");
+    println!("║    ✓ AppPropertiesPart           ✓ MediaPart (10 formats)    ║");
+    println!("║    ✓ TablePart (cell formatting) ✓ ContentTypesPart          ║");
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    println!("║  ELEMENTS API:                                               ║");
+    println!("║    ✓ RgbColor        ✓ SchemeColor    ✓ Color enum           ║");
+    println!("║    ✓ Position        ✓ Size           ✓ Transform            ║");
+    println!("║    ✓ EMU conversions (inches, cm, mm, pt)                    ║");
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    println!("║  ADVANCED FEATURES (NEW):                                    ║");
+    println!("║    ✓ Animation (50+ effects)  ✓ Transitions (27 types)       ║");
+    println!("║    ✓ SmartArt (25 layouts)    ✓ 3D Models (GLB/GLTF/OBJ)     ║");
+    println!("║    ✓ VBA Macros (.pptm)       ✓ Embedded Fonts               ║");
+    println!("║    ✓ Custom XML               ✓ Handout Master               ║");
+    println!("║    ✓ Table borders/alignment  ✓ Merged cells                 ║");
     println!("╠══════════════════════════════════════════════════════════════╣");
     println!("║  Output: comprehensive_demo.pptx ({} slides, {} KB)         ║", 
              slides.len(), pptx_data.len() / 1024);

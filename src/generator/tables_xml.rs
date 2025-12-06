@@ -68,8 +68,11 @@ fn generate_row_xml(row: &TableRow) -> String {
 fn generate_cell_xml(cell: &TableCell) -> String {
     let mut xml = String::from(r#"<a:tc>"#);
 
-    // Cell properties with margins and text anchor
-    xml.push_str(r#"<a:tcPr marL="91440" marR="91440" marT="45720" marB="45720" anchor="ctr" anchorCtr="0">"#);
+    // Cell properties with margins and text anchor (vertical alignment)
+    let valign = cell.valign.as_str();
+    xml.push_str(&format!(
+        r#"<a:tcPr marL="91440" marR="91440" marT="45720" marB="45720" anchor="{valign}" anchorCtr="0">"#
+    ));
 
     // Background color if specified
     if let Some(color) = &cell.background_color {
@@ -83,8 +86,13 @@ fn generate_cell_xml(cell: &TableCell) -> String {
 
     xml.push_str("</a:tcPr>");
 
-    // Cell text body - handle multi-line content
-    xml.push_str(r#"<a:txBody><a:bodyPr rot="0" vert="horz" anchor="ctr" anchorCtr="0" wrap="square"/><a:lstStyle/><a:p><a:pPr algn="ctr"/><a:r>"#);
+    // Cell text body with wrap setting and vertical alignment
+    let wrap = if cell.wrap_text { "square" } else { "none" };
+    let valign = cell.valign.as_str();
+    let halign = cell.align.as_str();
+    xml.push_str(&format!(
+        r#"<a:txBody><a:bodyPr rot="0" vert="horz" anchor="{valign}" anchorCtr="0" wrap="{wrap}"/><a:lstStyle/><a:p><a:pPr algn="{halign}"/><a:r>"#
+    ));
 
     // Build text properties with all formatting options
     let mut rpr_attrs = vec!["lang=\"en-US\"".to_string()];
@@ -107,31 +115,26 @@ fn generate_cell_xml(cell: &TableCell) -> String {
     // Build the rPr element with all formatting
     let mut rpr_content = String::new();
     
-    // Text color if specified
+    // Text color if specified (default to black if not specified for visibility)
     if let Some(ref color) = cell.text_color {
         rpr_content.push_str(&format!(
             r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#
         ));
-    }
-    
-    // Font family if specified
-    if let Some(ref family) = cell.font_family {
-        rpr_content.push_str(&format!(r#"<a:latin typeface="{family}"/>"#));
-    }
-    
-    // Build the complete rPr element
-    if rpr_content.is_empty() {
-        xml.push_str(&format!(
-            r#"<a:rPr {}/>"#,
-            rpr_attrs.join(" ")
-        ));
     } else {
-        xml.push_str(&format!(
-            r#"<a:rPr {}>{}</a:rPr>"#,
-            rpr_attrs.join(" "),
-            rpr_content
-        ));
+        // Default black text color for visibility
+        rpr_content.push_str(r#"<a:solidFill><a:srgbClr val="000000"/></a:solidFill>"#);
     }
+    
+    // Font family - always include a default font for proper rendering
+    let font_family = cell.font_family.as_deref().unwrap_or("Calibri");
+    rpr_content.push_str(&format!(r#"<a:latin typeface="{font_family}"/><a:ea typeface="{font_family}"/><a:cs typeface="{font_family}"/>"#));
+    
+    // Build the complete rPr element (always has content now)
+    xml.push_str(&format!(
+        r#"<a:rPr {}>{}</a:rPr>"#,
+        rpr_attrs.join(" "),
+        rpr_content
+    ));
 
     // Cell text - handle newlines by splitting into multiple paragraphs
     let text = escape_xml(&cell.text);
@@ -140,16 +143,14 @@ fn generate_cell_xml(cell: &TableCell) -> String {
         let lines: Vec<&str> = text.split('\n').collect();
         for (i, line) in lines.iter().enumerate() {
             if i > 0 {
-                // Close previous paragraph and start new one
-                xml.push_str(r#"</a:r></a:p><a:p><a:pPr algn="ctr"/><a:r>"#);
+                // Close previous paragraph and start new one with same alignment
+                xml.push_str(&format!(r#"</a:r></a:p><a:p><a:pPr algn="{}"/><a:r>"#, cell.align.as_str()));
                 
                 // Rebuild text properties for new paragraph
                 let mut rpr_attrs = vec!["lang=\"en-US\"".to_string()];
                 let font_size = cell.font_size.unwrap_or(20) * 100;
                 rpr_attrs.push(format!("sz=\"{}\"", font_size));
-                // Bold (always include, "0" for non-bold, "1" for bold)
                 rpr_attrs.push(format!("b=\"{}\"", if cell.bold { "1" } else { "0" }));
-                // Italic (always include, "0" for non-italic, "1" for italic)
                 rpr_attrs.push(format!("i=\"{}\"", if cell.italic { "1" } else { "0" }));
                 if cell.underline {
                     rpr_attrs.push("u=\"sng\"".to_string());
@@ -162,24 +163,18 @@ fn generate_cell_xml(cell: &TableCell) -> String {
                     rpr_content.push_str(&format!(
                         r#"<a:solidFill><a:srgbClr val="{color}"/></a:solidFill>"#
                     ));
-                }
-                
-                if let Some(ref family) = cell.font_family {
-                    rpr_content.push_str(&format!(r#"<a:latin typeface="{family}"/>"#));
-                }
-                
-                if rpr_content.is_empty() {
-                    xml.push_str(&format!(
-                        r#"<a:rPr {}/>"#,
-                        rpr_attrs.join(" ")
-                    ));
                 } else {
-                    xml.push_str(&format!(
-                        r#"<a:rPr {}>{}</a:rPr>"#,
-                        rpr_attrs.join(" "),
-                        rpr_content
-                    ));
+                    rpr_content.push_str(r#"<a:solidFill><a:srgbClr val="000000"/></a:solidFill>"#);
                 }
+                
+                let font_family = cell.font_family.as_deref().unwrap_or("Calibri");
+                rpr_content.push_str(&format!(r#"<a:latin typeface="{font_family}"/><a:ea typeface="{font_family}"/><a:cs typeface="{font_family}"/>"#));
+                
+                xml.push_str(&format!(
+                    r#"<a:rPr {}>{}</a:rPr>"#,
+                    rpr_attrs.join(" "),
+                    rpr_content
+                ));
             }
             xml.push_str(&format!(r#"<a:t>{line}</a:t>"#));
         }

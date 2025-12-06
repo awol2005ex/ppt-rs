@@ -48,7 +48,7 @@ pub use xml::{SlideContent, SlideLayout};
 pub use text::{TextFormat, FormattedText, TextFrame, Paragraph, Run, TextAlign, TextAnchor};
 pub use shapes::{Shape, ShapeType, ShapeFill, ShapeLine, emu_to_inches, inches_to_emu, cm_to_emu};
 pub use shapes_xml::{generate_shape_xml, generate_shapes_xml, generate_connector_xml};
-pub use tables::{Table, TableRow, TableCell, TableBuilder};
+pub use tables::{Table, TableRow, TableCell, TableBuilder, CellAlign, CellVAlign};
 pub use images::{Image, ImageBuilder};
 pub use images_xml::{generate_image_xml, generate_image_relationship, generate_image_content_type};
 pub use charts::{Chart, ChartType, ChartSeries, ChartBuilder, generate_chart_xml};

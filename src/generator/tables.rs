@@ -1,5 +1,47 @@
 //! Table creation support for PPTX generation
 
+/// Horizontal text alignment
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum CellAlign {
+    Left,
+    #[default]
+    Center,
+    Right,
+    Justify,
+}
+
+impl CellAlign {
+    /// Get the OOXML alignment value
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            CellAlign::Left => "l",
+            CellAlign::Center => "ctr",
+            CellAlign::Right => "r",
+            CellAlign::Justify => "just",
+        }
+    }
+}
+
+/// Vertical text alignment
+#[derive(Clone, Debug, Default, PartialEq)]
+pub enum CellVAlign {
+    Top,
+    #[default]
+    Middle,
+    Bottom,
+}
+
+impl CellVAlign {
+    /// Get the OOXML anchor value
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            CellVAlign::Top => "t",
+            CellVAlign::Middle => "ctr",
+            CellVAlign::Bottom => "b",
+        }
+    }
+}
+
 /// Table cell content
 #[derive(Clone, Debug)]
 pub struct TableCell {
@@ -11,6 +53,9 @@ pub struct TableCell {
     pub background_color: Option<String>, // RGB hex color for background
     pub font_size: Option<u32>,          // Font size in points
     pub font_family: Option<String>,     // Font family name
+    pub align: CellAlign,                // Horizontal alignment
+    pub valign: CellVAlign,              // Vertical alignment
+    pub wrap_text: bool,                 // Text wrapping
 }
 
 impl TableCell {
@@ -25,6 +70,9 @@ impl TableCell {
             background_color: None,
             font_size: None,
             font_family: None,
+            align: CellAlign::Center,
+            valign: CellVAlign::Middle,
+            wrap_text: true,
         }
     }
 
@@ -67,6 +115,54 @@ impl TableCell {
     /// Set font family name
     pub fn font_family(mut self, family: &str) -> Self {
         self.font_family = Some(family.to_string());
+        self
+    }
+
+    /// Set horizontal text alignment
+    pub fn align(mut self, align: CellAlign) -> Self {
+        self.align = align;
+        self
+    }
+
+    /// Set horizontal text alignment to left
+    pub fn align_left(mut self) -> Self {
+        self.align = CellAlign::Left;
+        self
+    }
+
+    /// Set horizontal text alignment to right
+    pub fn align_right(mut self) -> Self {
+        self.align = CellAlign::Right;
+        self
+    }
+
+    /// Set horizontal text alignment to center
+    pub fn align_center(mut self) -> Self {
+        self.align = CellAlign::Center;
+        self
+    }
+
+    /// Set vertical text alignment
+    pub fn valign(mut self, valign: CellVAlign) -> Self {
+        self.valign = valign;
+        self
+    }
+
+    /// Set vertical text alignment to top
+    pub fn valign_top(mut self) -> Self {
+        self.valign = CellVAlign::Top;
+        self
+    }
+
+    /// Set vertical text alignment to bottom
+    pub fn valign_bottom(mut self) -> Self {
+        self.valign = CellVAlign::Bottom;
+        self
+    }
+
+    /// Enable or disable text wrapping
+    pub fn wrap(mut self, wrap: bool) -> Self {
+        self.wrap_text = wrap;
         self
     }
 }

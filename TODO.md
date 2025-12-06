@@ -2,6 +2,22 @@
 
 ## Recently Completed
 
+### Advanced Features (v1.0.12)
+- [x] Enhanced `TablePart` with advanced formatting:
+  - Cell alignment (horizontal: left/center/right/justify, vertical: top/middle/bottom)
+  - Borders (all sides, individual sides, styles: solid/dashed/dotted/double)
+  - Cell margins, underline, strikethrough, font family
+  - Merged cells support
+- [x] Added `Animation` - Slide animations (50+ effects: fade, fly, zoom, etc.)
+- [x] Added `SlideTransition` - 27 transition effects (fade, push, wipe, etc.)
+- [x] Added `HandoutMasterPart` - Handout master with layout options
+- [x] Added `CustomXmlPart` - Custom XML data storage
+- [x] Added `VbaProjectPart` - VBA macro support (.pptm files)
+- [x] Added `EmbeddedFontPart` - Embedded fonts with font collection
+- [x] Added `SmartArtPart` - 25 SmartArt layouts (lists, processes, cycles, etc.)
+- [x] Added `Model3DPart` - 3D models (GLB/GLTF/OBJ/FBX/STL formats)
+- [x] All 592 tests passing (+42 new tests)
+
 ### Extended Parts Support (v1.0.11)
 - [x] Added `SlideLayoutPart` - Slide layout templates with 11 layout types
 - [x] Added `SlideMasterPart` - Slide master templates with theme/layout management
@@ -432,12 +448,19 @@ See [LEARNING_ANALYSIS.md](LEARNING_ANALYSIS.md) for detailed analysis.
 
 ## Future Enhancements
 
-- [ ] Animation support
-- [ ] Master slide support
+- [x] Animation support (v1.0.12) - 50+ animation effects, 27 transitions
+- [x] Master slide support (v1.0.11) - SlideMasterPart with theme/layout management
 - [x] Notes page support (v1.0.6)
-- [ ] Handout master support
-- [ ] Custom XML support
-- [ ] VBA macro support
-- [ ] Embedded fonts support
-- [ ] SmartArt support
-- [ ] 3D model support
+- [x] Handout master support (v1.0.12) - HandoutMasterPart with layout options
+- [x] Custom XML support (v1.0.12) - CustomXmlPart for data storage
+- [x] VBA macro support (v1.0.12) - VbaProjectPart for .pptm files
+- [x] Embedded fonts support (v1.0.12) - EmbeddedFontPart with font collection
+- [x] SmartArt support (v1.0.12) - 25 SmartArt layouts
+- [x] 3D model support (v1.0.12) - GLB/GLTF/OBJ/FBX/STL formats
+
+### Remaining Future Work
+- [ ] Digital signatures
+- [ ] Ink annotations
+- [ ] Comments and review
+- [ ] Slide show settings
+- [ ] Print settings
