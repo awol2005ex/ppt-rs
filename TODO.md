@@ -2,6 +2,19 @@
 
 ## Recently Completed
 
+### Extended Parts Support (v1.0.11)
+- [x] Added `SlideLayoutPart` - Slide layout templates with 11 layout types
+- [x] Added `SlideMasterPart` - Slide master templates with theme/layout management
+- [x] Added `ThemePart` - Theme support with colors, fonts, and format schemes
+- [x] Added `NotesSlidePart` - Speaker notes with multiline text support
+- [x] Added `AppPropertiesPart` - Application metadata (company, slide count, etc.)
+- [x] Added `MediaPart` - Video/audio embedding (10 formats: mp4, webm, mp3, wav, etc.)
+- [x] Added `TablePart` - Table embedding with cell formatting and spans
+- [x] Added `ContentTypesPart` - Content types management for package
+- [x] Extended `ContentType` enum with NotesSlide, NotesMaster, Media, Table variants
+- [x] Extended `PartType` enum with matching variants and relationship types
+- [x] All 550 tests passing (+45 new tests)
+
 ### Architecture Optimization (v1.0.10)
 - [x] Created unified `elements/` module for shared types (Color, Position, Size, Transform)
 - [x] Removed empty stub modules (`table.rs`, `slide.rs`, `media.rs`, `text/`, `shapes/`, `chart/`, `dml/`)

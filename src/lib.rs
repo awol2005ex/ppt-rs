@@ -78,10 +78,22 @@ pub use generator::{
 pub use integration::{PresentationBuilder, SlideBuilder, PresentationMetadata};
 pub use oxml::repair::{PptxRepair, RepairIssue, RepairResult};
 
+// Parts re-exports
+pub use parts::{
+    Part, PartType, ContentType,
+    PresentationPart, SlidePart, SlideLayoutPart, LayoutType,
+    SlideMasterPart, ThemePart, NotesSlidePart,
+    ImagePart, MediaPart, MediaFormat, ChartPart,
+    TablePart, TableRowPart, TableCellPart,
+    CorePropertiesPart, AppPropertiesPart,
+    ContentTypesPart, Relationships,
+};
+
 // Web2PPT re-exports
 #[cfg(feature = "web2ppt")]
 pub use web2ppt::{
-    Web2Ppt, WebFetcher, WebParser, WebContent, ContentBlock, ContentType,
+    Web2Ppt, WebFetcher, WebParser, WebContent, ContentBlock,
+    ContentType as WebContentType, // Renamed to avoid conflict with parts::ContentType
     Web2PptConfig, ConversionOptions, Web2PptError,
     html_to_pptx, html_to_pptx_with_options, url_to_pptx, url_to_pptx_with_options,
 };
