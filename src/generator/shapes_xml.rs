@@ -91,8 +91,36 @@ fn generate_line_xml(line: &Option<ShapeLine>) -> String {
 fn generate_text_xml(text: &Option<String>) -> String {
     match text {
         Some(t) => {
-            format!(
-                r#"<p:txBody>
+            // Check if this is code (starts with [ and contains language tag)
+            let is_code = t.starts_with('[') && t.contains("]\n");
+            
+            if is_code {
+                // Code block: use monospace font, left align, smaller size
+                let mut paragraphs = String::new();
+                for line in t.lines() {
+                    let escaped = escape_xml(line);
+                    paragraphs.push_str(&format!(
+                        r#"<a:p>
+<a:pPr algn="l"/>
+<a:r>
+<a:rPr lang="en-US" sz="1200" dirty="0"><a:latin typeface="Consolas"/><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:rPr>
+<a:t>{}</a:t>
+</a:r>
+</a:p>"#,
+                        escaped
+                    ));
+                }
+                format!(
+                    r#"<p:txBody>
+<a:bodyPr wrap="square" rtlCol="0" anchor="t" lIns="91440" tIns="45720" rIns="91440" bIns="45720"/>
+<a:lstStyle/>
+{}</p:txBody>"#,
+                    paragraphs
+                )
+            } else {
+                // Regular text: centered
+                format!(
+                    r#"<p:txBody>
 <a:bodyPr wrap="square" rtlCol="0" anchor="ctr"/>
 <a:lstStyle/>
 <a:p>
@@ -103,8 +131,9 @@ fn generate_text_xml(text: &Option<String>) -> String {
 </a:r>
 </a:p>
 </p:txBody>"#,
-                escape_xml(t)
-            )
+                    escape_xml(t)
+                )
+            }
         }
         None => {
             // Empty text body required for shapes

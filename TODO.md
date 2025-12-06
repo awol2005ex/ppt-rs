@@ -2,6 +2,31 @@
 
 ## Recently Completed
 
+### Enhanced md2ppt with Tables & More (v1.0.15)
+- [x] Added pulldown-cmark for proper markdown parsing
+- [x] Tables: GFM-style tables with header styling
+- [x] **Syntax-highlighted code blocks**: Using syntect library
+  - Supports 25+ languages (Rust, Python, JavaScript, etc.)
+  - Base16 Ocean Dark theme colors
+  - Consolas monospace font
+- [x] **Mermaid diagrams**: 12 diagram types with visual placeholders
+  - Flowchart, Sequence, Gantt, Class, State, ER
+  - Journey, Pie, Mindmap, Timeline, Quadrant, Git
+  - Extracts and displays key elements (nodes, connections, entities)
+  - Color-coded headers per diagram type
+- [x] Speaker notes: Blockquotes become speaker notes
+- [x] **Rich text formatting**: Bold, italic, inline code translated to PPTX
+  - `**bold**` → bold text (b="1")
+  - `*italic*` → italic text (i="1")
+  - `` `code` `` → monospace Consolas font with color
+- [x] Slide breaks: Horizontal rules create continuation slides
+- [x] Image placeholders: Images shown as placeholder shapes
+- [x] Subheadings: H2+ become bold bullet points
+- [x] Comprehensive demo: `examples/md2ppt_demo.md` (25 slides)
+- [x] All markdown tests passing (10 tests)
+- [x] Rich text parsing tests (8 tests)
+- [x] Syntax highlighting tests (4 tests)
+
 ### Table Text Rendering Fix (v1.0.14)
 - [x] Fixed critical table cell text visibility issue
 - [x] Learned from reference PPTX that `<a:txBody>` must come BEFORE `<a:tcPr>`

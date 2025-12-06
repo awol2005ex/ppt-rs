@@ -88,23 +88,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Markdown Format
 
-The Markdown format is simple and intuitive:
+The Markdown format supports rich content:
 
-- `# Heading` → Creates a new slide with that title
-- `- Bullet` → Adds a bullet point (also supports `*` and `+`)
-- Empty lines are ignored
-- Each `#` heading starts a new slide
+| Syntax | Result |
+|--------|--------|
+| `# Heading` | New slide with title |
+| `## Subheading` | Bold bullet point |
+| `- Bullet` | Bullet points (also `*`, `+`) |
+| `1. Item` | Numbered list |
+| `**bold**` | Bold text |
+| `*italic*` | Italic text |
+| `` `code` `` | Inline code |
+| `> Quote` | Speaker notes |
+| `| Table |` | GFM-style tables |
+| ` ```code``` ` | Code blocks |
+| ` ```mermaid ` | Mermaid diagrams (12 types) |
+| `---` | Slide break |
 
 **Example:**
 ```markdown
 # Introduction
-- Welcome
-- Agenda overview
+- Welcome to the presentation
+- **Key point** with emphasis
 
-# Main Content
-- Key point 1
-- Key point 2
-- Key point 3
+# Data Table
+| Product | Sales |
+|---------|-------|
+| Widget  | $100  |
+
+> Speaker notes go here
+
+# Code Example
+```python
+print("Hello!")
+```
 
 # Conclusion
 - Summary

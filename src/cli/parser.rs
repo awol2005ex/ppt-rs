@@ -68,12 +68,31 @@ Examples:
         alias = "from-markdown",
         long_about = "Convert a Markdown file to a PowerPoint presentation.
 
-Each # heading creates a new slide. Bullet points (-, *, +) become slide content.
+Supported Markdown Features:
+  # Heading      → New slide with title
+  ## Subheading  → Bold bullet point
+  - Bullet       → Bullet points (also *, +)
+  1. Numbered    → Numbered list items
+  **bold**       → Bold text
+  *italic*       → Italic text
+  `code`         → Inline code
+  > Blockquote   → Speaker notes
+  | Table |      → Tables (GFM style)
+  ```code```     → Code blocks (as shapes)
+  ```mermaid     → Mermaid diagrams (12 types)
+  ---            → Slide break (continuation)
 
-Markdown Format:
-  # Slide Title
-  - First bullet point
-  - Second bullet point
+Example Markdown:
+  # Introduction
+  - Welcome to the presentation
+  - **Key point** with emphasis
+
+  # Data
+  | Name | Value |
+  |------|-------|
+  | A    | 100   |
+
+  > Speaker notes go here
 
 Examples:
   pptcli md2ppt slides.md presentation.pptx
