@@ -364,19 +364,53 @@ impl MarkdownParser {
         let diagram_type = mermaid::detect_type(code);
         let (_, _, title, _) = mermaid::get_diagram_style(diagram_type);
         
+        // Center diagram on slide if bounds are available
+        // Slide dimensions: 9144000 x 6858000 EMU (standard 16:9)
+        let slide_width = 9_144_000u32;
+        let slide_height = 6_858_000u32;
+        let title_offset = 1_200_000u32; // Leave space for title
+        
+        let (offset_x, offset_y) = if let Some(bounds) = &elements.bounds {
+            // Calculate offset to center diagram
+            let available_height = slide_height - title_offset;
+            let center_x = (slide_width.saturating_sub(bounds.width)) / 2;
+            let center_y = title_offset + (available_height.saturating_sub(bounds.height)) / 2;
+            
+            // Offset from current position to centered position
+            (center_x.saturating_sub(bounds.x) as i32, center_y.saturating_sub(bounds.y) as i32)
+        } else {
+            (0, 0)
+        };
+        
+        // Apply offset to shapes
+        let shapes: Vec<_> = elements.shapes.into_iter().map(|mut shape| {
+            shape.x = (shape.x as i32 + offset_x).max(0) as u32;
+            shape.y = (shape.y as i32 + offset_y).max(0) as u32;
+            shape
+        }).collect();
+        
+        // Apply offset to connectors
+        let connectors: Vec<_> = elements.connectors.into_iter().map(|mut conn| {
+            conn.start_x = (conn.start_x as i32 + offset_x).max(0) as u32;
+            conn.start_y = (conn.start_y as i32 + offset_y).max(0) as u32;
+            conn.end_x = (conn.end_x as i32 + offset_x).max(0) as u32;
+            conn.end_y = (conn.end_y as i32 + offset_y).max(0) as u32;
+            conn
+        }).collect();
+        
         if let Some(ref mut slide) = self.current_slide {
-            for shape in elements.shapes {
+            for shape in shapes {
                 slide.shapes.push(shape);
             }
-            for connector in elements.connectors {
+            for connector in connectors {
                 slide.connectors.push(connector);
             }
         } else {
             let mut slide = SlideContent::new(title);
-            for shape in elements.shapes {
+            for shape in shapes {
                 slide.shapes.push(shape);
             }
-            for connector in elements.connectors {
+            for connector in connectors {
                 slide.connectors.push(connector);
             }
             self.current_slide = Some(slide);

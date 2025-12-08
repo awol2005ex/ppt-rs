@@ -93,10 +93,6 @@ pub struct DiagramBounds {
 }
 
 impl DiagramBounds {
-    pub fn new(x: u32, y: u32, width: u32, height: u32) -> Self {
-        Self { x, y, width, height }
-    }
-    
     /// Calculate bounds from a set of positions and dimensions
     pub fn from_elements(positions: &[(u32, u32, u32, u32)]) -> Option<Self> {
         if positions.is_empty() {
@@ -130,7 +126,8 @@ pub struct DiagramElements {
     pub connectors: Vec<Connector>,
     /// Bounding box of the diagram for positioning
     pub bounds: Option<DiagramBounds>,
-    /// Whether elements should be grouped
+    /// Whether elements should be grouped (for future `<p:grpSp>` support)
+    #[allow(dead_code)]
     pub grouped: bool,
 }
 
@@ -164,16 +161,6 @@ impl DiagramElements {
             connectors,
             bounds,
             grouped: true,
-        }
-    }
-    
-    /// Create empty diagram elements
-    pub fn empty() -> Self {
-        Self {
-            shapes: Vec::new(),
-            connectors: Vec::new(),
-            bounds: None,
-            grouped: false,
         }
     }
 }

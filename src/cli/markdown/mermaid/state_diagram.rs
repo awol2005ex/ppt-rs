@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use crate::generator::{Shape, ShapeType, ShapeFill, ShapeLine};
-use crate::generator::connectors::{Connector, ConnectorType, ConnectorLine, ArrowType};
+use crate::generator::connectors::{Connector, ConnectorType, ConnectorLine, ArrowType, ConnectionSite};
 use super::types::DiagramElements;
 
 /// Generate shapes and connectors for a state diagram
@@ -49,11 +49,14 @@ pub fn generate_elements(code: &str) -> DiagramElements {
     let v_spacing = 1_200_000u32;
     
     let mut state_positions: HashMap<String, (u32, u32)> = HashMap::new();
+    let mut state_shape_ids: HashMap<String, u32> = HashMap::new();
+    let mut shape_id = 10u32;
     
     for (i, state) in states.iter().enumerate() {
         let x = start_x + (i as u32 % 3) * h_spacing;
         let y = start_y + (i as u32 / 3) * v_spacing;
         state_positions.insert(state.clone(), (x, y));
+        state_shape_ids.insert(state.clone(), shape_id);
         
         let shape_type = if state == "Start" || state == "End" {
             ShapeType::Ellipse
@@ -66,16 +69,32 @@ pub fn generate_elements(code: &str) -> DiagramElements {
                         else { "E0F7FA" };
         
         let shape = Shape::new(shape_type, x, y, state_width, state_height)
+            .with_id(shape_id)
             .with_fill(ShapeFill::new(fill_color))
             .with_line(ShapeLine::new("00838F", 2))
             .with_text(state);
         shapes.push(shape);
+        shape_id += 1;
     }
     
     for (from, to, label) in &transitions {
         if let (Some(&(from_x, from_y)), Some(&(to_x, to_y))) = 
             (state_positions.get(from), state_positions.get(to)) 
         {
+            let from_shape_id = state_shape_ids.get(from).copied();
+            let to_shape_id = state_shape_ids.get(to).copied();
+            
+            // Smart connection site selection
+            let (start_site, end_site) = if from_x < to_x {
+                (ConnectionSite::Right, ConnectionSite::Left)
+            } else if from_x > to_x {
+                (ConnectionSite::Left, ConnectionSite::Right)
+            } else if from_y < to_y {
+                (ConnectionSite::Bottom, ConnectionSite::Top)
+            } else {
+                (ConnectionSite::Top, ConnectionSite::Bottom)
+            };
+            
             let mut connector = Connector::new(
                 ConnectorType::Elbow,
                 from_x + state_width, from_y + state_height / 2,
@@ -84,8 +103,35 @@ pub fn generate_elements(code: &str) -> DiagramElements {
             .with_line(ConnectorLine::new("00838F", 19050))
             .with_end_arrow(ArrowType::Triangle);
             
+            // Anchor to shapes
+            if let Some(id) = from_shape_id {
+                connector = connector.connect_start(id, start_site);
+            }
+            if let Some(id) = to_shape_id {
+                connector = connector.connect_end(id, end_site);
+            }
+            
+            // Create separate label shape for better font control
             if !label.is_empty() {
-                connector = connector.with_label(label);
+                let label_width = 800_000u32;
+                let label_height = 250_000u32;
+                let mid_x = (from_x + state_width + to_x) / 2;
+                let mid_y = (from_y + to_y + state_height) / 2;
+                
+                let label_shape = Shape::new(
+                    ShapeType::RoundedRectangle,
+                    mid_x.saturating_sub(label_width / 2),
+                    mid_y.saturating_sub(label_height / 2),
+                    label_width,
+                    label_height
+                )
+                .with_id(shape_id)
+                .with_fill(ShapeFill::new("FFFDE7"))
+                .with_line(ShapeLine::new("00838F", 1))
+                .with_text(label);
+                
+                shapes.push(label_shape);
+                shape_id += 1;
             }
             connectors.push(connector);
         }

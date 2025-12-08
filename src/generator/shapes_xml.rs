@@ -185,21 +185,28 @@ fn generate_text_xml_with_autofit(text: &Option<String>, width: u32, height: u32
                 // Get contrasting text color based on fill
                 let text_color = get_text_color(fill_color);
                 
+                // Use left alignment for multi-line text, center for single line
+                let is_multiline = t.contains('\n');
+                let alignment = if is_multiline { "l" } else { "ctr" };
+                let anchor = if is_multiline { "t" } else { "ctr" };
+                
                 // Use PowerPoint's auto-fit feature for additional safety
                 format!(
                     r#"<p:txBody>
-<a:bodyPr wrap="square" rtlCol="0" anchor="ctr">
+<a:bodyPr wrap="square" rtlCol="0" anchor="{}">
 <a:normAutofit/>
 </a:bodyPr>
 <a:lstStyle/>
 <a:p>
-<a:pPr algn="ctr"/>
+<a:pPr algn="{}"/>
 <a:r>
 <a:rPr lang="en-US" sz="{}" dirty="0"><a:solidFill><a:srgbClr val="{}"/></a:solidFill></a:rPr>
 <a:t>{}</a:t>
 </a:r>
 </a:p>
 </p:txBody>"#,
+                    anchor,
+                    alignment,
                     font_size,
                     text_color,
                     escape_xml(t)

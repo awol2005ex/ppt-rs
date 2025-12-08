@@ -81,37 +81,3 @@ pub fn generate_title_shape(
     )
 }
 
-/// Generate content text box XML
-pub fn generate_content_textbox(
-    id: u32,
-    name: &str,
-    x: u32,
-    y: u32,
-    width: u32,
-    height: u32,
-    paragraphs: &str,
-) -> String {
-    format!(
-        r#"
-<p:sp>
-<p:nvSpPr>
-<p:cNvPr id="{id}" name="{name}"/>
-<p:cNvSpPr txBox="1"/>
-<p:nvPr/>
-</p:nvSpPr>
-<p:spPr>
-<a:xfrm>
-<a:off x="{x}" y="{y}"/>
-<a:ext cx="{width}" cy="{height}"/>
-</a:xfrm>
-<a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
-<a:noFill/>
-</p:spPr>
-<p:txBody>
-<a:bodyPr wrap="square" rtlCol="0"/>
-<a:lstStyle/>
-{paragraphs}
-</p:txBody>
-</p:sp>"#
-    )
-}

@@ -2,24 +2,48 @@
 
 ## Recently Completed
 
-### v0.1.8 - Diagram Improvements
+### v0.1.9 - Diagram Improvements & Code Cleanup
 - [x] **Connectors now anchor to shapes for auto-routing**
   - Added `id` field to `Shape` struct for fixed shape IDs
   - Added `with_id()` builder method to set shape ID
   - Shapes with fixed IDs preserve their ID during XML generation
   - Connectors use `stCxn`/`endCxn` XML elements to anchor to shapes
-  - Horizontal flow: connects Right site → Left site
-  - Vertical flow: connects Bottom site → Top site
   - PowerPoint auto-routes connectors when shapes are moved
-- [x] **Diagram bounding box calculation**
-  - Added `DiagramBounds` struct with x, y, width, height
-  - `DiagramElements` now includes `bounds: Option<DiagramBounds>`
-  - Bounds calculated automatically from shape positions
-  - Enables future centering/scaling of diagrams
-- [x] **Diagram grouping support**
-  - Added `grouped: bool` flag to `DiagramElements`
-  - Helper methods: `from_shapes()`, `from_shapes_and_connectors()`, `empty()`
-  - All diagram types now use consistent element creation
+- [x] **Smart connection site selection**
+  - Determines optimal connection sites based on relative positions
+  - Horizontal: Right → Left, Vertical: Bottom → Top
+  - Applied to flowchart, class_diagram, state_diagram, er_diagram
+- [x] **Diagram bounding box & centering**
+  - `DiagramBounds` struct calculates diagram bounds
+  - Diagrams automatically centered on slide
+  - Leaves space for title (1.2M EMU offset)
+- [x] **Connector labels as separate shapes**
+  - Labels now rendered as separate text box shapes
+  - Positioned at midpoint of connector
+  - Standard font sizing (auto-fit based on shape size)
+  - Better visual appearance in PowerPoint
+- [x] **Fixed subgraph layout in flowcharts**
+  - Subgraph title now in separate shape at top
+  - Nodes offset below title to avoid overlap
+  - Background shape no longer contains text
+- [x] **Fixed ER diagram relationship labels**
+  - Parser now extracts labels after colon (`: places`, `: contains`)
+  - Labels rendered as separate shapes at connector midpoint
+  - Supports quoted labels like `"ordered in"`
+- [x] **Improved text alignment in shapes**
+  - Multi-line text now left-aligned and top-anchored
+  - Single-line text remains center-aligned
+  - Better readability for class diagram attributes/methods
+- [x] **Separated text labels from visual shapes**
+  - Git graph: commit labels now separate from circles
+  - Quadrant chart: point labels now separate from dots
+  - Mindmap: node labels now separate from background shapes
+  - Prevents vertical text in small shapes
+  - Better font sizing and layout control
+- [x] **Code cleanup**
+  - Removed unused `generate_content_textbox` function
+  - Removed unused `create_diagram_shapes` function
+  - Zero compiler warnings
   - All tests passing
 
 ### v0.1.7 - Code Blocks & Shape Text Improvements
@@ -596,3 +620,18 @@ See [LEARNING_ANALYSIS.md](LEARNING_ANALYSIS.md) for detailed analysis.
 - [ ] Comments and review
 - [ ] Slide show settings
 - [ ] Print settings
+
+## v0.1.9 - Code Quality & Diagram Improvements ✅
+
+### Code Cleanup
+- [x] Remove unused `generate_content_textbox` function
+- [x] Remove unused `create_diagram_shapes` function (replaced by `create_diagram_elements`)
+- [x] Remove unused `DiagramBounds::new` and `DiagramElements::empty` functions
+- [x] Use `DiagramBounds` for diagram centering on slides
+- [ ] Use `grouped` flag to wrap diagrams in `<p:grpSp>` group shapes (future)
+
+### Diagram Enhancements
+- [x] Smart connection site selection based on relative positions
+- [x] Add shape IDs to class_diagram, state_diagram, er_diagram for connector anchoring
+- [x] Improve diagram positioning - center on slide based on bounds
+- [ ] Add diagram title shape above diagram content (future)

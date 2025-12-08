@@ -215,23 +215,30 @@ pub fn generate_elements(flowchart: &Flowchart) -> DiagramElements {
         
         for (sg_idx, subgraph) in flowchart.subgraphs.iter().enumerate() {
             let sg_width = node_width + 400_000;
-            let sg_height = (subgraph.nodes.len() as u32) * v_spacing + 400_000;
+            let title_height = 250_000u32;
+            let sg_height = (subgraph.nodes.len() as u32) * v_spacing + 400_000 + title_height;
             let sg_x = subgraph_x;
             let sg_y = subgraph_start_y;
             
-            // Subgraph background shape
+            // Subgraph background shape (no text - just background)
             let sg_shape = Shape::new(ShapeType::RoundedRectangle, sg_x, sg_y, sg_width, sg_height)
                 .with_fill(ShapeFill::new(get_subgraph_color(sg_idx)))
-                .with_line(ShapeLine::new("757575", 1))
-                .with_text(&subgraph.name);
+                .with_line(ShapeLine::new("757575", 1));
             shapes.push(sg_shape);
             element_bounds.push((sg_x, sg_y, sg_width, sg_height));
             
-            // Layout nodes within subgraph
+            // Subgraph title at top
+            let title_shape = Shape::new(ShapeType::Rectangle, sg_x + 50_000, sg_y + 50_000, sg_width - 100_000, title_height)
+                .with_id(shape_id)
+                .with_text(&subgraph.name);
+            shapes.push(title_shape);
+            shape_id += 1;
+            
+            // Layout nodes within subgraph (offset by title height)
             for (node_idx, node_id) in subgraph.nodes.iter().enumerate() {
                 if let Some(node) = flowchart.nodes.iter().find(|n| &n.id == node_id) {
                     let x = sg_x + 200_000;
-                    let y = sg_y + 300_000 + (node_idx as u32) * v_spacing;
+                    let y = sg_y + title_height + 200_000 + (node_idx as u32) * v_spacing;
                     
                     node_positions.insert(node.id.clone(), (x, y));
                     node_shape_ids.insert(node.id.clone(), shape_id);
@@ -339,8 +346,28 @@ pub fn generate_elements(flowchart: &Flowchart) -> DiagramElements {
                 connector = connector.connect_end(to_id, end_site);
             }
             
+            // Create separate label shape for better font control
             if let Some(label) = &conn.label {
-                connector = connector.with_label(label);
+                let label_width = 600_000u32;
+                let label_height = 250_000u32;
+                let mid_x = (start_x + end_x) / 2;
+                let mid_y = (start_y + end_y) / 2;
+                
+                let label_shape = Shape::new(
+                    ShapeType::Rectangle,
+                    mid_x.saturating_sub(label_width / 2),
+                    mid_y.saturating_sub(label_height / 2),
+                    label_width,
+                    label_height
+                )
+                .with_id(shape_id)
+                .with_fill(ShapeFill::new("FFFFFF"))
+                .with_line(ShapeLine::new("757575", 1))
+                .with_text(label);
+                
+                shapes.push(label_shape);
+                element_bounds.push((mid_x - label_width / 2, mid_y - label_height / 2, label_width, label_height));
+                shape_id += 1;
             }
             
             connectors.push(connector);

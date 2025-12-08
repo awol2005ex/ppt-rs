@@ -123,11 +123,6 @@ pub fn create_diagram_elements(code: &str) -> DiagramElements {
     }
 }
 
-/// Create shapes for a Mermaid diagram (backward compatibility)
-pub fn create_diagram_shapes(code: &str) -> Vec<Shape> {
-    create_diagram_elements(code).shapes
-}
-
 /// Get diagram style info (for backward compatibility)
 pub fn get_diagram_style(diagram_type: MermaidType) -> (&'static str, &'static str, &'static str, &'static str) {
     match diagram_type {
