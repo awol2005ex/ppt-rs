@@ -7,7 +7,7 @@ description = "Create, read, and update PowerPoint 2007+ (.pptx) files with rich
 license = "Apache-2.0"
 repository = "https://github.com/yingkitw/ppt-rs"
 keywords = ["powerpoint", "ppt", "pptx", "openxml", "office"]
-categories = ["document-generation", "parsing"]
+categories = ["text-processing", "parser-implementations"]
 readme = "README.md"
 
 [dependencies]
