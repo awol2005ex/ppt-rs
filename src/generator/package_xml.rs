@@ -56,6 +56,9 @@ pub fn create_content_types_xml_with_charts(slides: usize, custom_slides: Option
                     xml.push_str(&format!(
                         "\n<Override PartName=\"/ppt/charts/chart{slide_num}_{chart_index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawingml.chart+xml\"/>"
                     ));
+                    xml.push_str(&format!(
+                        "\n<Override PartName=\"/ppt/charts/chart{slide_num}_{chart_index}_data.xlsx\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\"/>"
+                    ));
                 }
             }
         }
@@ -201,12 +204,21 @@ pub fn create_slide_rels_xml_with_charts(slide_num: usize, chart_count: usize) -
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>"#);
     
-    // Add chart relationships
+    // Add chart relationships (chart XML files)
     for i in 0..chart_count {
         let chart_id = i + 2; // Start from rId2 since rId1 is for layout
         xml.push_str(&format!(
             r#"
 <Relationship Id="rId{chart_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart{slide_num}_{i}.xml"/>"#
+        ));
+    }
+    
+    // Add Excel data relationships (for external data reference)
+    for i in 0..chart_count {
+        let excel_id = chart_count + i + 2; // Continue from where chart IDs left off
+        xml.push_str(&format!(
+            r#"
+<Relationship Id="rId{excel_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../charts/chart{slide_num}_{i}_data.xlsx"/>"#
         ));
     }
     
@@ -220,7 +232,7 @@ pub fn create_slide_rels_xml_with_notes_and_charts(slide_num: usize, chart_count
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>"#);
     
-    // Add chart relationships
+    // Add chart relationships (chart XML files)
     for i in 0..chart_count {
         let chart_id = i + 2; // Start from rId2 since rId1 is for layout
         xml.push_str(&format!(
@@ -229,8 +241,17 @@ pub fn create_slide_rels_xml_with_notes_and_charts(slide_num: usize, chart_count
         ));
     }
     
+    // Add Excel data relationships (for external data reference)
+    for i in 0..chart_count {
+        let excel_id = chart_count + i + 2; // Continue from where chart IDs left off
+        xml.push_str(&format!(
+            r#"
+<Relationship Id="rId{excel_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../charts/chart{slide_num}_{i}_data.xlsx"/>"#
+        ));
+    }
+    
     // Add notes relationship
-    let notes_id = chart_count + 2;
+    let notes_id = 2 * chart_count + 2;
     xml.push_str(&format!(
         r#"
 <Relationship Id="rId{notes_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="../notesSlides/notesSlide{slide_num}.xml"/>"#

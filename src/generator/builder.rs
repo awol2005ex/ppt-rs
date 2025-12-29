@@ -245,7 +245,7 @@ fn write_notes_relationships(
     Ok(())
 }
 
-/// Write chart XML files
+/// Write chart XML files and Excel data files
 fn write_charts(
     zip: &mut ZipWriter<Cursor<Vec<u8>>>,
     options: &FileOptions,
@@ -255,9 +255,15 @@ fn write_charts(
         for (i, slide) in slides.iter().enumerate() {
             let slide_num = i + 1;
             for (chart_index, chart) in slide.charts.iter().enumerate() {
+                // Write chart XML
                 let chart_xml = crate::generator::charts::xml::generate_chart_data_xml(chart);
                 zip.start_file(format!("ppt/charts/chart{slide_num}_{chart_index}.xml"), *options)?;
                 zip.write_all(chart_xml.as_bytes())?;
+                
+                // Write Excel data file
+                let excel_bytes = crate::generator::charts::excel::generate_excel_bytes(chart);
+                zip.start_file(format!("ppt/charts/chart{slide_num}_{chart_index}_data.xlsx"), *options)?;
+                zip.write_all(&excel_bytes)?;
             }
         }
     }

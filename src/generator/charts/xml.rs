@@ -3,17 +3,23 @@
 use super::types::ChartType;
 use super::data::Chart;
 use super::escape_xml;
+use super::excel::{get_excel_writer, get_excel_writer_with_name, worksheet_name_for_chart};
 
 /// Generate chart XML for a slide
 pub fn generate_chart_xml(chart: &Chart, shape_id: usize) -> String {
+    generate_chart_xml_with_number(chart, shape_id, 1)
+}
+
+/// Generate chart XML for a slide with specific chart number for worksheet naming
+pub fn generate_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_number: usize) -> String {
     match chart.chart_type {
         ChartType::Bar | ChartType::BarHorizontal | ChartType::BarStacked | ChartType::BarStacked100 => {
-            generate_bar_chart_xml(chart, shape_id)
+            generate_bar_chart_xml_with_number(chart, shape_id, chart_number)
         }
         ChartType::Line | ChartType::LineMarkers | ChartType::LineStacked => {
             generate_line_chart_xml(chart, shape_id)
         }
-        ChartType::Pie => generate_pie_chart_xml(chart, shape_id),
+        ChartType::Pie => generate_pie_chart_xml_with_number(chart, shape_id, chart_number),
         ChartType::Doughnut => generate_doughnut_chart_xml(chart, shape_id),
         ChartType::Area | ChartType::AreaStacked | ChartType::AreaStacked100 => {
             generate_area_chart_xml(chart, shape_id)
@@ -120,23 +126,48 @@ fn chart_frame_header(chart: &Chart, shape_id: usize) -> String {
     )
 }
 
-/// Generate the common chart frame footer
-fn chart_frame_footer() -> &'static str {
-    r#"</c:plotArea>
+/// Generate the common chart frame footer with external data reference
+fn chart_frame_footer(relationship_id: Option<&str>) -> String {
+    let mut xml = String::from(r#"</c:plotArea>
 <c:legend>
 <c:legendPos val="r"/>
 <c:overlay val="0"/>
 </c:legend>
 <c:plotVisOnly val="1"/>
-</c:chart>
+"#);
+    
+    // Add external data reference if provided
+    if let Some(rid) = relationship_id {
+        xml.push_str(&format!(
+            r#"<c:externalData r:id="{}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<c:autoUpdate val="0"/>
+</c:externalData>
+"#,
+            rid
+        ));
+    }
+    
+    xml.push_str(r#"</c:chart>
 </c:chartSpace>
 </a:graphicData>
 </a:graphic>
-</p:graphicFrame>"#
+</p:graphicFrame>"#);
+    
+    xml
 }
 
-/// Generate series data XML
-fn generate_series_data(_chart: &Chart, idx: usize, series_name: &str, values: &[f64]) -> String {
+/// Generate series data XML using Excel references
+fn generate_series_data(chart: &Chart, idx: usize, series_name: &str, values: &[f64]) -> String {
+    generate_series_data_with_number(chart, idx, series_name, values, 1)
+}
+
+/// Generate series data XML using Excel references with specific chart number
+fn generate_series_data_with_number(chart: &Chart, idx: usize, series_name: &str, values: &[f64], chart_number: usize) -> String {
+    let worksheet_name = worksheet_name_for_chart(chart_number);
+    let excel_writer = get_excel_writer_with_name(&chart.chart_type, worksheet_name);
+    let values_ref = excel_writer.values_ref(idx);
+    let name_ref = excel_writer.series_name_ref(idx);
+    
     let mut xml = format!(
         r#"
 <c:ser>
@@ -144,16 +175,15 @@ fn generate_series_data(_chart: &Chart, idx: usize, series_name: &str, values: &
 <c:order val="{}"/>
 <c:title>
 <c:tx>
-<c:rich>
-<a:bodyPr/>
-<a:lstStyle/>
-<a:p>
-<a:r>
-<a:rPr lang="en-US" sz="1000"/>
-<a:t>{}</a:t>
-</a:r>
-</a:p>
-</c:rich>
+<c:strRef>
+<c:f>{}</c:f>
+<c:strCache>
+<c:ptCount val="1"/>
+<c:pt idx="0">
+<c:v>{}</c:v>
+</c:pt>
+</c:strCache>
+</c:strRef>
 </c:tx>
 </c:title>
 <c:dLbls>
@@ -161,19 +191,20 @@ fn generate_series_data(_chart: &Chart, idx: usize, series_name: &str, values: &
 </c:dLbls>
 <c:val>
 <c:numRef>
-<c:f>Sheet1!$B${}:$B${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
-        idx, idx, escape_xml(series_name), 2 + idx, 2 + idx + values.len()
+<c:formatCode>0</c:formatCode>
+<c:ptCount val="{}"/>"#,
+        idx, idx, name_ref, escape_xml(series_name), values_ref, values.len()
     );
 
-    for value in values {
+    for (i, value) in values.iter().enumerate() {
         xml.push_str(&format!(
             r#"
-<c:pt idx="0">
+<c:pt idx="{}">
 <c:v>{}</c:v>
 </c:pt>"#,
-            value
+            i, value
         ));
     }
 
@@ -188,8 +219,17 @@ fn generate_series_data(_chart: &Chart, idx: usize, series_name: &str, values: &
     xml
 }
 
-/// Generate category axis XML
+/// Generate category axis XML using Excel references
 fn generate_category_axis(chart: &Chart, ax_pos: &str) -> String {
+    generate_category_axis_with_number(chart, ax_pos, 1)
+}
+
+/// Generate category axis XML using Excel references with specific chart number
+fn generate_category_axis_with_number(chart: &Chart, ax_pos: &str, chart_number: usize) -> String {
+    let worksheet_name = worksheet_name_for_chart(chart_number);
+    let excel_writer = get_excel_writer_with_name(&chart.chart_type, worksheet_name);
+    let categories_ref = excel_writer.categories_ref();
+    
     let mut xml = format!(
         r#"
 <c:catAx>
@@ -200,15 +240,15 @@ fn generate_category_axis(chart: &Chart, ax_pos: &str) -> String {
 <c:delete val="0"/>
 <c:axPos val="{}"/>
 <c:majorGridlines/>
-<c:numFmt formatCode="General" sourceLinked="1"/>
+<c:numFmt formatCode="0" sourceLinked="1"/>
 <c:tickLblPos val="low"/>
 <c:crossAx val="2"/>
 <c:crosses val="autoZero"/>
 <c:strRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="{}"/>"#,
-        ax_pos, 1 + chart.category_count(), chart.category_count()
+        ax_pos, categories_ref, chart.category_count()
     );
 
     for (idx, cat) in chart.categories.iter().enumerate() {
@@ -243,7 +283,7 @@ fn generate_value_axis(ax_pos: &str) -> String {
 <c:delete val="0"/>
 <c:axPos val="{}"/>
 <c:majorGridlines/>
-<c:numFmt formatCode="General" sourceLinked="1"/>
+<c:numFmt formatCode="0" sourceLinked="1"/>
 <c:tickLblPos val="low"/>
 <c:crossAx val="1"/>
 <c:crosses val="autoZero"/>
@@ -254,6 +294,10 @@ fn generate_value_axis(ax_pos: &str) -> String {
 
 /// Generate bar chart XML
 fn generate_bar_chart_xml(chart: &Chart, shape_id: usize) -> String {
+    generate_bar_chart_xml_with_number(chart, shape_id, 1)
+}
+
+fn generate_bar_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_number: usize) -> String {
     let mut xml = chart_frame_header(chart, shape_id);
     
     xml.push_str(r#"<c:barChart>
@@ -261,13 +305,13 @@ fn generate_bar_chart_xml(chart: &Chart, shape_id: usize) -> String {
 <c:grouping val="clustered"/>"#);
 
     for (idx, series) in chart.series.iter().enumerate() {
-        xml.push_str(&generate_series_data(chart, idx, &series.name, &series.values));
+        xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
-    xml.push_str(&generate_category_axis(chart, "l"));
+    xml.push_str(&generate_category_axis_with_number(chart, "l", chart_number));
     xml.push_str(&generate_value_axis("b"));
     xml.push_str("</c:barChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -286,13 +330,17 @@ fn generate_line_chart_xml(chart: &Chart, shape_id: usize) -> String {
     xml.push_str(&generate_category_axis(chart, "b"));
     xml.push_str(&generate_value_axis("l"));
     xml.push_str("</c:lineChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
 
-/// Generate pie chart XML
+/// Generate pie chart XML using Excel references
 fn generate_pie_chart_xml(chart: &Chart, shape_id: usize) -> String {
+    generate_pie_chart_xml_with_number(chart, shape_id, 1)
+}
+
+fn generate_pie_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_number: usize) -> String {
     let mut xml = chart_frame_header(chart, shape_id);
     
     xml.push_str(r#"<c:pieChart>
@@ -300,36 +348,39 @@ fn generate_pie_chart_xml(chart: &Chart, shape_id: usize) -> String {
 
     // Pie chart uses first series only
     if let Some(series) = chart.series.first() {
+        let worksheet_name = worksheet_name_for_chart(chart_number);
+        let excel_writer = get_excel_writer_with_name(&chart.chart_type, worksheet_name);
+        let values_ref = excel_writer.values_ref(0);
+        let categories_ref = excel_writer.categories_ref();
+        
         xml.push_str(&format!(
             r#"
 <c:ser>
 <c:idx val="0"/>
 <c:order val="0"/>
-<c:title>
 <c:tx>
-<c:rich>
-<a:bodyPr/>
-<a:lstStyle/>
-<a:p>
-<a:r>
-<a:rPr lang="en-US" sz="1000"/>
-<a:t>{}</a:t>
-</a:r>
-</a:p>
-</c:rich>
+<c:strRef>
+<c:f>{}</c:f>
+<c:strCache>
+<c:ptCount val="1"/>
+<c:pt idx="0"><c:v>{}</c:v></c:pt>
+</c:strCache>
+</c:strRef>
 </c:tx>
-</c:title>
 <c:dLbls>
 <c:showCatName val="1"/>
 <c:showPercent val="1"/>
 </c:dLbls>
 <c:val>
 <c:numRef>
-<c:f>Sheet1!$B$2:$B${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
+<c:formatCode>0</c:formatCode>
+<c:ptCount val="{}"/>"#,
+            excel_writer.series_name_ref(0),
             escape_xml(&series.name),
-            1 + series.values.len()
+            values_ref,
+            series.values.len()
         ));
 
         for (idx, value) in series.values.iter().enumerate() {
@@ -349,10 +400,10 @@ fn generate_pie_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:val>
 <c:cat>
 <c:strRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="{}"/>"#,
-            1 + chart.category_count(),
+            categories_ref,
             chart.category_count()
         ));
 
@@ -376,7 +427,7 @@ fn generate_pie_chart_xml(chart: &Chart, shape_id: usize) -> String {
     }
 
     xml.push_str("</c:pieChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -391,6 +442,10 @@ fn generate_doughnut_chart_xml(chart: &Chart, shape_id: usize) -> String {
 
     // Doughnut chart uses first series only (like pie)
     if let Some(series) = chart.series.first() {
+        let excel_writer = get_excel_writer(&chart.chart_type);
+        let values_ref = excel_writer.values_ref(0);
+        let categories_ref = excel_writer.categories_ref();
+        
         xml.push_str(&format!(
             r#"
 <c:ser>
@@ -398,7 +453,7 @@ fn generate_doughnut_chart_xml(chart: &Chart, shape_id: usize) -> String {
 <c:order val="0"/>
 <c:tx>
 <c:strRef>
-<c:f>Sheet1!$B$1</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="1"/>
 <c:pt idx="0"><c:v>{}</c:v></c:pt>
@@ -411,11 +466,12 @@ fn generate_doughnut_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:dLbls>
 <c:val>
 <c:numRef>
-<c:f>Sheet1!$B$2:$B${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
+<c:formatCode>0</c:formatCode>"#,
+            excel_writer.series_name_ref(0),
             escape_xml(&series.name),
-            1 + series.values.len()
+            values_ref
         ));
 
         for (idx, value) in series.values.iter().enumerate() {
@@ -435,10 +491,10 @@ fn generate_doughnut_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:val>
 <c:cat>
 <c:strRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="{}"/>"#,
-            1 + chart.category_count(),
+            categories_ref,
             chart.category_count()
         ));
 
@@ -462,7 +518,7 @@ fn generate_doughnut_chart_xml(chart: &Chart, shape_id: usize) -> String {
     }
 
     xml.push_str("</c:doughnutChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -482,7 +538,7 @@ fn generate_area_chart_xml(chart: &Chart, shape_id: usize) -> String {
     xml.push_str(&generate_category_axis(chart, "b"));
     xml.push_str(&generate_value_axis("l"));
     xml.push_str("</c:areaChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -496,6 +552,10 @@ fn generate_scatter_chart_xml(chart: &Chart, shape_id: usize) -> String {
 <c:scatterStyle val="{}"/>"#, scatter_style));
 
     for (idx, series) in chart.series.iter().enumerate() {
+        let excel_writer = get_excel_writer(&chart.chart_type);
+        let values_ref = excel_writer.values_ref(idx);
+        let categories_ref = excel_writer.categories_ref();
+        
         xml.push_str(&format!(
             r#"
 <c:ser>
@@ -503,7 +563,7 @@ fn generate_scatter_chart_xml(chart: &Chart, shape_id: usize) -> String {
 <c:order val="{}"/>
 <c:tx>
 <c:strRef>
-<c:f>Sheet1!$B$1</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="1"/>
 <c:pt idx="0"><c:v>{}</c:v></c:pt>
@@ -512,10 +572,10 @@ fn generate_scatter_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:tx>
 <c:xVal>
 <c:numRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
-            idx, idx, escape_xml(&series.name), 1 + series.values.len()
+<c:formatCode>0</c:formatCode>"#,
+            idx, idx, excel_writer.series_name_ref(idx), escape_xml(&series.name), categories_ref
         ));
 
         // X values (use index as X)
@@ -536,10 +596,10 @@ fn generate_scatter_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:xVal>
 <c:yVal>
 <c:numRef>
-<c:f>Sheet1!$B$2:$B${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
-            1 + series.values.len()
+<c:formatCode>0</c:formatCode>"#,
+            values_ref
         ));
 
         for (i, value) in series.values.iter().enumerate() {
@@ -564,7 +624,7 @@ fn generate_scatter_chart_xml(chart: &Chart, shape_id: usize) -> String {
     xml.push_str(&generate_value_axis("b"));
     xml.push_str(&generate_value_axis("l"));
     xml.push_str("</c:scatterChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -578,6 +638,10 @@ fn generate_bubble_chart_xml(chart: &Chart, shape_id: usize) -> String {
 <c:bubbleScale val="100"/>"#);
 
     for (idx, series) in chart.series.iter().enumerate() {
+        let excel_writer = get_excel_writer(&chart.chart_type);
+        let values_ref = excel_writer.values_ref(idx);
+        let categories_ref = excel_writer.categories_ref();
+        
         xml.push_str(&format!(
             r#"
 <c:ser>
@@ -585,7 +649,7 @@ fn generate_bubble_chart_xml(chart: &Chart, shape_id: usize) -> String {
 <c:order val="{}"/>
 <c:tx>
 <c:strRef>
-<c:f>Sheet1!$B$1</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="1"/>
 <c:pt idx="0"><c:v>{}</c:v></c:pt>
@@ -594,10 +658,10 @@ fn generate_bubble_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:tx>
 <c:xVal>
 <c:numRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
-            idx, idx, escape_xml(&series.name), 1 + series.values.len()
+<c:formatCode>0</c:formatCode>"#,
+            idx, idx, excel_writer.series_name_ref(idx), escape_xml(&series.name), categories_ref
         ));
 
         for (i, _) in series.values.iter().enumerate() {
@@ -617,10 +681,10 @@ fn generate_bubble_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:xVal>
 <c:yVal>
 <c:numRef>
-<c:f>Sheet1!$B$2:$B${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
-            1 + series.values.len()
+<c:formatCode>0</c:formatCode>"#,
+            values_ref
         ));
 
         for (i, value) in series.values.iter().enumerate() {
@@ -633,6 +697,16 @@ fn generate_bubble_chart_xml(chart: &Chart, shape_id: usize) -> String {
             ));
         }
 
+        // Use bubble sizes if available, otherwise use values
+        let bubble_sizes_ref = if let Some(ref _bubble_sizes) = series.bubble_sizes {
+            // For now, use the same values reference but this should be a separate column
+            // TODO: Implement proper bubble size column in Excel writer
+            values_ref.clone()
+        } else {
+            // Use values as bubble sizes (absolute values)
+            values_ref.clone()
+        };
+        
         xml.push_str(&format!(
             r#"
 </c:numCache>
@@ -640,10 +714,10 @@ fn generate_bubble_chart_xml(chart: &Chart, shape_id: usize) -> String {
 </c:yVal>
 <c:bubbleSize>
 <c:numRef>
-<c:f>Sheet1!$C$2:$C${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>"#,
-            1 + series.values.len()
+<c:formatCode>0</c:formatCode>"#,
+            bubble_sizes_ref
         ));
 
         // Bubble sizes (use values as sizes)
@@ -669,7 +743,7 @@ fn generate_bubble_chart_xml(chart: &Chart, shape_id: usize) -> String {
     xml.push_str(&generate_value_axis("b"));
     xml.push_str(&generate_value_axis("l"));
     xml.push_str("</c:bubbleChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -689,7 +763,7 @@ fn generate_radar_chart_xml(chart: &Chart, shape_id: usize) -> String {
     xml.push_str(&generate_category_axis(chart, "b"));
     xml.push_str(&generate_value_axis("l"));
     xml.push_str("</c:radarChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -708,7 +782,7 @@ fn generate_stock_chart_xml(chart: &Chart, shape_id: usize) -> String {
     xml.push_str(&generate_category_axis(chart, "b"));
     xml.push_str(&generate_value_axis("l"));
     xml.push_str("</c:stockChart>");
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -743,7 +817,7 @@ fn generate_combo_chart_xml(chart: &Chart, shape_id: usize) -> String {
         xml.push_str("</c:lineChart>");
     }
 
-    xml.push_str(chart_frame_footer());
+    xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
 }
@@ -779,15 +853,30 @@ fn chart_data_header(chart: &Chart) -> String {
 }
 
 /// Generate chart data XML footer (common for all chart data files)
-fn chart_data_footer() -> &'static str {
-    r#"</c:plotArea>
+fn chart_data_footer(relationship_id: Option<&str>) -> String {
+    let mut xml = String::from(r#"</c:plotArea>
 <c:legend>
 <c:legendPos val="r"/>
 <c:overlay val="0"/>
 </c:legend>
 <c:plotVisOnly val="1"/>
-</c:chart>
-</c:chartSpace>"#
+"#);
+    
+    // Add external data reference if provided
+    if let Some(rid) = relationship_id {
+        xml.push_str(&format!(
+            r#"<c:externalData r:id="{}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<c:autoUpdate val="0"/>
+</c:externalData>
+"#,
+            rid
+        ));
+    }
+    
+    xml.push_str(r#"</c:chart>
+</c:chartSpace>"#);
+    
+    xml
 }
 
 /// Generate bar chart data XML (for external chart file)
@@ -811,7 +900,7 @@ fn generate_bar_chart_data_xml(chart: &Chart) -> String {
     xml.push_str(&generate_category_axis_for_chart(chart, "l"));
     xml.push_str(&generate_value_axis_for_chart("b"));
     xml.push_str("</c:barChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -835,7 +924,7 @@ fn generate_line_chart_data_xml(chart: &Chart) -> String {
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
     xml.push_str(&generate_value_axis_for_chart("l"));
     xml.push_str("</c:lineChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -853,7 +942,7 @@ fn generate_pie_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str("</c:pieChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -872,7 +961,7 @@ fn generate_doughnut_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str("</c:doughnutChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -896,7 +985,7 @@ fn generate_area_chart_data_xml(chart: &Chart) -> String {
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
     xml.push_str(&generate_value_axis_for_chart("l"));
     xml.push_str("</c:areaChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -920,7 +1009,7 @@ fn generate_scatter_chart_data_xml(chart: &Chart) -> String {
     xml.push_str(&generate_value_axis_for_chart("b"));
     xml.push_str(&generate_value_axis_for_chart("l"));
     xml.push_str("</c:scatterChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -940,7 +1029,7 @@ fn generate_bubble_chart_data_xml(chart: &Chart) -> String {
     xml.push_str(&generate_value_axis_for_chart("b"));
     xml.push_str(&generate_value_axis_for_chart("l"));
     xml.push_str("</c:bubbleChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -964,7 +1053,7 @@ fn generate_radar_chart_data_xml(chart: &Chart) -> String {
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
     xml.push_str(&generate_value_axis_for_chart("l"));
     xml.push_str("</c:radarChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -983,7 +1072,7 @@ fn generate_stock_chart_data_xml(chart: &Chart) -> String {
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
     xml.push_str(&generate_value_axis_for_chart("l"));
     xml.push_str("</c:stockChart>");
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
@@ -1018,13 +1107,18 @@ fn generate_combo_chart_data_xml(chart: &Chart) -> String {
         xml.push_str("</c:lineChart>");
     }
 
-    xml.push_str(chart_data_footer());
+    xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
 }
 
 /// Generate series data XML for chart data files
 fn generate_series_data_for_chart(chart: &Chart, idx: usize, series_name: &str, values: &[f64]) -> String {
+    let excel_writer = get_excel_writer(&chart.chart_type);
+    let name_ref = excel_writer.series_name_ref(idx);
+    let categories_ref = excel_writer.categories_ref();
+    let values_ref = excel_writer.values_ref(idx);
+    
     let mut xml = format!(
         r#"
 <c:ser>
@@ -1032,7 +1126,7 @@ fn generate_series_data_for_chart(chart: &Chart, idx: usize, series_name: &str, 
 <c:order val="{}"/>
 <c:tx>
 <c:strRef>
-<c:f>Sheet1!${}${}</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="1"/>
 <c:pt idx="0">
@@ -1041,7 +1135,7 @@ fn generate_series_data_for_chart(chart: &Chart, idx: usize, series_name: &str, 
 </c:strCache>
 </c:strRef>
 </c:tx>"#,
-        idx, idx, (b'B' + idx as u8) as char, 1, escape_xml(series_name)
+        idx, idx, name_ref, escape_xml(series_name)
     );
 
     // Add category data
@@ -1049,10 +1143,10 @@ fn generate_series_data_for_chart(chart: &Chart, idx: usize, series_name: &str, 
         r#"
 <c:cat>
 <c:strRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="{}"/>"#,
-        1 + chart.category_count(), chart.category_count()
+        categories_ref, chart.category_count()
     ));
 
     for (cat_idx, cat) in chart.categories.iter().enumerate() {
@@ -1072,11 +1166,11 @@ fn generate_series_data_for_chart(chart: &Chart, idx: usize, series_name: &str, 
 </c:cat>
 <c:val>
 <c:numRef>
-<c:f>Sheet1!${}${}:${}${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>
+<c:formatCode>0</c:formatCode>
 <c:ptCount val="{}"/>"#,
-        (b'B' + idx as u8) as char, 2, (b'B' + idx as u8) as char, 1 + values.len(), values.len()
+        values_ref, values.len()
     ));
 
     for (val_idx, value) in values.iter().enumerate() {
@@ -1102,6 +1196,11 @@ fn generate_series_data_for_chart(chart: &Chart, idx: usize, series_name: &str, 
 
 /// Generate series data XML for scatter charts
 fn generate_series_data_for_scatter(_chart: &Chart, idx: usize, series_name: &str, values: &[f64]) -> String {
+    let excel_writer = get_excel_writer(&ChartType::Scatter);
+    let name_ref = excel_writer.series_name_ref(idx);
+    let categories_ref = excel_writer.categories_ref();
+    let values_ref = excel_writer.values_ref(idx);
+    
     let mut xml = format!(
         r#"
 <c:ser>
@@ -1109,7 +1208,7 @@ fn generate_series_data_for_scatter(_chart: &Chart, idx: usize, series_name: &st
 <c:order val="{}"/>
 <c:tx>
 <c:strRef>
-<c:f>Sheet1!${}${}</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="1"/>
 <c:pt idx="0">
@@ -1118,7 +1217,7 @@ fn generate_series_data_for_scatter(_chart: &Chart, idx: usize, series_name: &st
 </c:strCache>
 </c:strRef>
 </c:tx>"#,
-        idx, idx, (b'B' + idx as u8) as char, 1, escape_xml(series_name)
+        idx, idx, name_ref, escape_xml(series_name)
     );
 
     // X values (use index as X)
@@ -1126,11 +1225,11 @@ fn generate_series_data_for_scatter(_chart: &Chart, idx: usize, series_name: &st
         r#"
 <c:xVal>
 <c:numRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>
+<c:formatCode>0</c:formatCode>
 <c:ptCount val="{}"/>"#,
-        1 + values.len(), values.len()
+        categories_ref, values.len()
     ));
 
     for (i, _) in values.iter().enumerate() {
@@ -1150,11 +1249,11 @@ fn generate_series_data_for_scatter(_chart: &Chart, idx: usize, series_name: &st
 </c:xVal>
 <c:yVal>
 <c:numRef>
-<c:f>Sheet1!${}${}:${}${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>
+<c:formatCode>0</c:formatCode>
 <c:ptCount val="{}"/>"#,
-        (b'B' + idx as u8) as char, 2, (b'B' + idx as u8) as char, 1 + values.len(), values.len()
+        values_ref, values.len()
     ));
 
     for (i, value) in values.iter().enumerate() {
@@ -1181,6 +1280,12 @@ fn generate_series_data_for_scatter(_chart: &Chart, idx: usize, series_name: &st
 
 /// Generate series data XML for bubble charts
 fn generate_series_data_for_bubble(_chart: &Chart, idx: usize, series_name: &str, values: &[f64]) -> String {
+    let excel_writer = get_excel_writer(&ChartType::Bubble);
+    let name_ref = excel_writer.series_name_ref(idx);
+    let categories_ref = excel_writer.categories_ref();
+    let values_ref = excel_writer.values_ref(idx);
+    let bubble_sizes_ref = excel_writer.bubble_sizes_ref(idx);
+    
     let mut xml = format!(
         r#"
 <c:ser>
@@ -1188,7 +1293,7 @@ fn generate_series_data_for_bubble(_chart: &Chart, idx: usize, series_name: &str
 <c:order val="{}"/>
 <c:tx>
 <c:strRef>
-<c:f>Sheet1!${}${}</c:f>
+<c:f>{}</c:f>
 <c:strCache>
 <c:ptCount val="1"/>
 <c:pt idx="0">
@@ -1197,7 +1302,7 @@ fn generate_series_data_for_bubble(_chart: &Chart, idx: usize, series_name: &str
 </c:strCache>
 </c:strRef>
 </c:tx>"#,
-        idx, idx, (b'B' + idx as u8) as char, 1, escape_xml(series_name)
+        idx, idx, name_ref, escape_xml(series_name)
     );
 
     // X values (use index as X)
@@ -1205,11 +1310,11 @@ fn generate_series_data_for_bubble(_chart: &Chart, idx: usize, series_name: &str
         r#"
 <c:xVal>
 <c:numRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>
+<c:formatCode>0</c:formatCode>
 <c:ptCount val="{}"/>"#,
-        1 + values.len(), values.len()
+        categories_ref, values.len()
     ));
 
     for (i, _) in values.iter().enumerate() {
@@ -1229,11 +1334,11 @@ fn generate_series_data_for_bubble(_chart: &Chart, idx: usize, series_name: &str
 </c:xVal>
 <c:yVal>
 <c:numRef>
-<c:f>Sheet1!${}${}:${}${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>
+<c:formatCode>0</c:formatCode>
 <c:ptCount val="{}"/>"#,
-        (b'B' + idx as u8) as char, 2, (b'B' + idx as u8) as char, 1 + values.len(), values.len()
+        values_ref, values.len()
     ));
 
     for (i, value) in values.iter().enumerate() {
@@ -1253,11 +1358,11 @@ fn generate_series_data_for_bubble(_chart: &Chart, idx: usize, series_name: &str
 </c:yVal>
 <c:bubbleSize>
 <c:numRef>
-<c:f>Sheet1!${}${}:${}${}</c:f>
+<c:f>{}</c:f>
 <c:numCache>
-<c:formatCode>General</c:formatCode>
+<c:formatCode>0</c:formatCode>
 <c:ptCount val="{}"/>"#,
-        (b'C' + idx as u8) as char, 2, (b'C' + idx as u8) as char, 1 + values.len(), values.len()
+        bubble_sizes_ref, values.len()
     ));
 
     // Bubble sizes (use values as sizes)
@@ -1283,8 +1388,8 @@ fn generate_series_data_for_bubble(_chart: &Chart, idx: usize, series_name: &str
 }
 
 /// Generate category axis XML for chart data files
-fn generate_category_axis_for_chart(chart: &Chart, ax_pos: &str) -> String {
-    let mut xml = format!(
+fn generate_category_axis_for_chart(_chart: &Chart, ax_pos: &str) -> String {
+    format!(
         r#"
 <c:catAx>
 <c:axId val="1"/>
@@ -1294,35 +1399,13 @@ fn generate_category_axis_for_chart(chart: &Chart, ax_pos: &str) -> String {
 <c:delete val="0"/>
 <c:axPos val="{}"/>
 <c:majorGridlines/>
-<c:numFmt formatCode="General" sourceLinked="1"/>
+<c:numFmt formatCode="0" sourceLinked="0"/>
 <c:tickLblPos val="low"/>
 <c:crossAx val="2"/>
 <c:crosses val="autoZero"/>
-<c:strRef>
-<c:f>Sheet1!$A$2:$A${}</c:f>
-<c:strCache>
-<c:ptCount val="{}"/>"#,
-        ax_pos, 1 + chart.category_count(), chart.category_count()
-    );
-
-    for (idx, cat) in chart.categories.iter().enumerate() {
-        xml.push_str(&format!(
-            r#"
-<c:pt idx="{}">
-<c:v>{}</c:v>
-</c:pt>"#,
-            idx, escape_xml(cat)
-        ));
-    }
-
-    xml.push_str(&format!(
-        r#"
-</c:strCache>
-</c:strRef>
-</c:catAx>"#
-    ));
-
-    xml
+</c:catAx>"#,
+        ax_pos
+    )
 }
 
 /// Generate value axis XML for chart data files
@@ -1337,7 +1420,7 @@ fn generate_value_axis_for_chart(ax_pos: &str) -> String {
 <c:delete val="0"/>
 <c:axPos val="{}"/>
 <c:majorGridlines/>
-<c:numFmt formatCode="General" sourceLinked="1"/>
+<c:numFmt formatCode="0" sourceLinked="0"/>
 <c:tickLblPos val="low"/>
 <c:crossAx val="1"/>
 <c:crosses val="autoZero"/>
