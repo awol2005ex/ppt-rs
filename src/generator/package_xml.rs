@@ -33,6 +33,44 @@ pub fn create_content_types_xml(slides: usize) -> String {
     xml
 }
 
+/// Create [Content_Types].xml with chart support
+pub fn create_content_types_xml_with_charts(slides: usize, custom_slides: Option<&Vec<super::slide_content::SlideContent>>) -> String {
+    let mut xml = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>"#.to_string();
+
+    for i in 1..=slides {
+        xml.push_str(&format!(
+            "\n<Override PartName=\"/ppt/slides/slide{i}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.presentationml.slide+xml\"/>"
+        ));
+    }
+
+    // Add chart content types
+    if let Some(slides_vec) = custom_slides {
+        for (i, slide) in slides_vec.iter().enumerate() {
+            if !slide.charts.is_empty() {
+                let slide_num = i + 1;
+                for chart_index in 0..slide.charts.len() {
+                    xml.push_str(&format!(
+                        "\n<Override PartName=\"/ppt/charts/chart{slide_num}_{chart_index}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawingml.chart+xml\"/>"
+                    ));
+                }
+            }
+        }
+    }
+
+    xml.push_str(r#"
+<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>
+<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/>
+<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>
+<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+</Types>"#);
+    xml
+}
+
 /// Create _rels/.rels
 pub fn create_rels_xml() -> String {
     r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -155,4 +193,49 @@ pub fn create_slide_rels_xml_with_notes(slide_num: usize) -> String {
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>
 <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="../notesSlides/notesSlide{slide_num}.xml"/>
 </Relationships>"#)
+}
+
+/// Create slide relationship XML with chart references
+pub fn create_slide_rels_xml_with_charts(slide_num: usize, chart_count: usize) -> String {
+    let mut xml = String::from(r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>"#);
+    
+    // Add chart relationships
+    for i in 0..chart_count {
+        let chart_id = i + 2; // Start from rId2 since rId1 is for layout
+        xml.push_str(&format!(
+            r#"
+<Relationship Id="rId{chart_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart{slide_num}_{i}.xml"/>"#
+        ));
+    }
+    
+    xml.push_str("\n</Relationships>");
+    xml
+}
+
+/// Create slide relationship XML with both notes and charts
+pub fn create_slide_rels_xml_with_notes_and_charts(slide_num: usize, chart_count: usize) -> String {
+    let mut xml = String::from(r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>"#);
+    
+    // Add chart relationships
+    for i in 0..chart_count {
+        let chart_id = i + 2; // Start from rId2 since rId1 is for layout
+        xml.push_str(&format!(
+            r#"
+<Relationship Id="rId{chart_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart{slide_num}_{i}.xml"/>"#
+        ));
+    }
+    
+    // Add notes relationship
+    let notes_id = chart_count + 2;
+    xml.push_str(&format!(
+        r#"
+<Relationship Id="rId{notes_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="../notesSlides/notesSlide{slide_num}.xml"/>"#
+    ));
+    
+    xml.push_str("\n</Relationships>");
+    xml
 }

@@ -9,7 +9,7 @@
 mod types;
 mod data;
 mod builder;
-mod xml;
+pub mod xml;
 
 pub use types::ChartType;
 pub use data::{Chart, ChartSeries};

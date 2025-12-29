@@ -5,7 +5,7 @@ use zip::ZipWriter;
 use zip::write::FileOptions;
 use super::xml::*;
 use super::notes_xml::*;
-use super::package_xml::{create_content_types_xml_with_notes, create_presentation_rels_xml_with_notes, create_slide_rels_xml_with_notes};
+use super::package_xml::{create_content_types_xml_with_notes, create_content_types_xml_with_charts, create_presentation_rels_xml_with_notes, create_slide_rels_xml_with_notes, create_slide_rels_xml_with_charts, create_slide_rels_xml_with_notes_and_charts};
 
 /// Create a minimal but valid PPTX file
 pub fn create_pptx(title: &str, slides: usize) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
@@ -44,14 +44,19 @@ fn write_package_files(
     slide_count: usize,
     custom_slides: Option<&Vec<super::xml::SlideContent>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    // Check if any slides have notes
+    // Check if any slides have notes or charts
     let has_notes = custom_slides
         .map(|slides| slides.iter().any(|s| s.notes.is_some()))
         .unwrap_or(false);
+    let has_charts = custom_slides
+        .map(|slides| slides.iter().any(|s| !s.charts.is_empty()))
+        .unwrap_or(false);
 
-    // 1. Content types (with notes if present)
+    // 1. Content types (with notes or charts if present)
     let content_types = if has_notes {
         create_content_types_xml_with_notes(slide_count, custom_slides)
+    } else if has_charts {
+        create_content_types_xml_with_charts(slide_count, custom_slides)
     } else {
         create_content_types_xml(slide_count)
     };
@@ -82,6 +87,9 @@ fn write_package_files(
 
     // 6. Slide relationships (with notes references if present)
     write_slide_relationships_with_notes(zip, options, custom_slides)?;
+
+    // 6.5. Charts (if charts present)
+    write_charts(zip, options, custom_slides)?;
 
     // 7. Notes relationships (if notes present)
     if has_notes {
@@ -195,11 +203,18 @@ fn write_slide_relationships_with_notes(
         Some(slides) => {
             for (i, slide) in slides.iter().enumerate() {
                 let slide_num = i + 1;
-                let slide_rels = if slide.notes.is_some() {
+                let chart_count = slide.charts.len();
+                
+                let slide_rels = if slide.notes.is_some() && chart_count > 0 {
+                    create_slide_rels_xml_with_notes_and_charts(slide_num, chart_count)
+                } else if slide.notes.is_some() {
                     create_slide_rels_xml_with_notes(slide_num)
+                } else if chart_count > 0 {
+                    create_slide_rels_xml_with_charts(slide_num, chart_count)
                 } else {
                     create_slide_rels_xml()
                 };
+                
                 zip.start_file(format!("ppt/slides/_rels/slide{slide_num}.xml.rels"), *options)?;
                 zip.write_all(slide_rels.as_bytes())?;
             }
@@ -224,6 +239,25 @@ fn write_notes_relationships(
                 let notes_rels = create_notes_rels_xml(slide_num);
                 zip.start_file(format!("ppt/notesSlides/_rels/notesSlide{slide_num}.xml.rels"), *options)?;
                 zip.write_all(notes_rels.as_bytes())?;
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Write chart XML files
+fn write_charts(
+    zip: &mut ZipWriter<Cursor<Vec<u8>>>,
+    options: &FileOptions,
+    custom_slides: Option<&Vec<super::xml::SlideContent>>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(slides) = custom_slides {
+        for (i, slide) in slides.iter().enumerate() {
+            let slide_num = i + 1;
+            for (chart_index, chart) in slide.charts.iter().enumerate() {
+                let chart_xml = crate::generator::charts::xml::generate_chart_data_xml(chart);
+                zip.start_file(format!("ppt/charts/chart{slide_num}_{chart_index}.xml"), *options)?;
+                zip.write_all(chart_xml.as_bytes())?;
             }
         }
     }
