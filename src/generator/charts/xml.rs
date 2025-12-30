@@ -349,9 +349,15 @@ fn generate_bar_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_numb
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:barChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_with_number(chart, "l", chart_number));
     xml.push_str(&generate_value_axis("b"));
-    xml.push_str("</c:barChart>");
+    
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -372,9 +378,15 @@ fn generate_line_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_num
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:lineChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_with_number(chart, "b", chart_number));
     xml.push_str(&generate_value_axis("l"));
-    xml.push_str("</c:lineChart>");
+    
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -457,9 +469,15 @@ fn generate_area_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_num
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:areaChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_with_number(chart, "b", chart_number));
     xml.push_str(&generate_value_axis("l"));
-    xml.push_str("</c:areaChart>");
+    
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -481,8 +499,8 @@ fn generate_scatter_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_
         xml.push_str(&generate_series_data_for_scatter_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
-    xml.push_str(&generate_value_axis("b"));
-    xml.push_str(&generate_value_axis("l"));
+    xml.push_str(&generate_value_axis_for_chart("b", 2));
+    xml.push_str(&generate_value_axis_for_chart("l", 3));
     xml.push_str("</c:scatterChart>");
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
@@ -505,9 +523,15 @@ fn generate_bubble_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_n
         xml.push_str(&generate_series_data_for_bubble_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
-    xml.push_str(&generate_value_axis("b"));
-    xml.push_str(&generate_value_axis("l"));
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
     xml.push_str("</c:bubbleChart>");
+    
+    // 轴定义放在图表外部
+    xml.push_str(&generate_value_axis_for_chart("b", 2));
+    xml.push_str(&generate_value_axis_for_chart("l", 3));
+    
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -529,9 +553,15 @@ fn generate_radar_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_nu
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:radarChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_with_number(chart, "b", chart_number));
     xml.push_str(&generate_value_axis("l"));
-    xml.push_str("</c:radarChart>");
+    
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -552,9 +582,15 @@ fn generate_stock_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_nu
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:stockChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_with_number(chart, "b", chart_number));
     xml.push_str(&generate_value_axis("l"));
-    xml.push_str("</c:stockChart>");
+    
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -578,8 +614,9 @@ fn generate_combo_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_nu
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
-    xml.push_str(&generate_category_axis_with_number(chart, "b", chart_number));
-    xml.push_str(&generate_value_axis("l"));
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
     xml.push_str("</c:barChart>");
 
     // Second half as lines
@@ -591,9 +628,16 @@ fn generate_combo_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_nu
             xml.push_str(&generate_series_data_with_number(chart, mid + idx, &series.name, &series.values, chart_number));
         }
 
+        // 添加轴ID引用（在图表内部）
+        xml.push_str("<c:axId val=\"1\"/>");  // catAx
+        xml.push_str("<c:axId val=\"2\"/>");  // valAx
         xml.push_str("</c:lineChart>");
     }
 
+    // 轴定义放在图表外部（所有图表共享）
+    xml.push_str(&generate_category_axis_with_number(chart, "b", chart_number));
+    xml.push_str(&generate_value_axis("l"));
+    
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -714,9 +758,14 @@ fn generate_bar_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:barChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_for_chart(chart, "l"));
     xml.push_str(&generate_value_axis_for_chart("b", 2));
-    xml.push_str("</c:barChart>");
     
     // Close plotArea before adding legend
     xml.push_str(r#"
@@ -743,9 +792,14 @@ fn generate_line_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:lineChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
     xml.push_str(&generate_value_axis_for_chart("l", 2));
-    xml.push_str("</c:lineChart>");
     
     // Close plotArea before adding legend
     xml.push_str(r#"
@@ -831,9 +885,14 @@ fn generate_area_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:areaChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
     xml.push_str(&generate_value_axis_for_chart("l", 2));
-    xml.push_str("</c:areaChart>");
     
     // Close plotArea before adding legend
     xml.push_str(r#"
@@ -860,9 +919,39 @@ fn generate_scatter_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_for_scatter_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
-    xml.push_str(&generate_value_axis_for_chart("b", 2));
-    xml.push_str(&generate_value_axis_for_chart("l", 3));
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"2\"/>");  // X轴 (valAx)
+    xml.push_str("<c:axId val=\"3\"/>");  // Y轴 (valAx)
     xml.push_str("</c:scatterChart>");
+    
+    // 轴定义放在图表外部 - 确保在plotArea内但在scatterChart外
+    xml.push_str("<c:valAx>");
+    xml.push_str(&format!(r#"<c:axId val="{}"/>
+<c:scaling>
+<c:orientation val="minMax"/>
+</c:scaling>
+<c:delete val="0"/>
+<c:axPos val="b"/>
+<c:majorGridlines/>
+<c:numFmt formatCode="0" sourceLinked="0"/>
+<c:tickLblPos val="low"/>
+<c:crossAx val="1"/>
+<c:crosses val="autoZero"/>
+</c:valAx>"#, 2));
+    
+    xml.push_str("<c:valAx>");
+    xml.push_str(&format!(r#"<c:axId val="{}"/>
+<c:scaling>
+<c:orientation val="minMax"/>
+</c:scaling>
+<c:delete val="0"/>
+<c:axPos val="l"/>
+<c:majorGridlines/>
+<c:numFmt formatCode="0" sourceLinked="0"/>
+<c:tickLblPos val="low"/>
+<c:crossAx val="1"/>
+<c:crosses val="autoZero"/>
+</c:valAx>"#, 3));
     
     // Close plotArea before adding legend
     xml.push_str(r#"
@@ -885,9 +974,14 @@ fn generate_bubble_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_for_bubble_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"2\"/>");  // X轴 (valAx)
+    xml.push_str("<c:axId val=\"3\"/>");  // Y轴 (valAx)
+    xml.push_str("</c:bubbleChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_value_axis_for_chart("b", 2));
     xml.push_str(&generate_value_axis_for_chart("l", 3));
-    xml.push_str("</c:bubbleChart>");
     
     // Close plotArea before adding legend
     xml.push_str(r#"
@@ -914,9 +1008,14 @@ fn generate_radar_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // catAx
+    xml.push_str("<c:axId val=\"2\"/>");  // valAx
+    xml.push_str("</c:radarChart>");
+    
+    // 轴定义放在图表外部
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
     xml.push_str(&generate_value_axis_for_chart("l", 2));
-    xml.push_str("</c:radarChart>");
     
     // Close plotArea before adding legend
     xml.push_str(r#"
