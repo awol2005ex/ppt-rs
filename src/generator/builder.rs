@@ -252,37 +252,43 @@ fn write_charts(
     custom_slides: Option<&Vec<super::xml::SlideContent>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if let Some(slides) = custom_slides {
+        let mut chart_counter = 0; // Initialize chart counter for global chart numbering
         for (i, slide) in slides.iter().enumerate() {
             let slide_num = i + 1;
             for (chart_index, chart) in slide.charts.iter().enumerate() {
-                // Write chart XML
+                // Calculate global chart number for standard naming (chart1.xml, chart2.xml, etc.)
+                let global_chart_num = chart_counter + chart_index + 1;
+                
+                // Write chart XML with standard naming
                 let chart_xml = crate::generator::charts::xml::generate_chart_data_xml(chart);
-                zip.start_file(format!("ppt/charts/chart{slide_num}_{chart_index}.xml"), *options)?;
+                zip.start_file(format!("ppt/charts/chart{global_chart_num}.xml"), *options)?;
                 zip.write_all(chart_xml.as_bytes())?;
                 
-                // Write chart style XML
+                // Write chart style XML with unique naming
                 let style_xml = crate::generator::charts::style::generate_chart_style_xml(chart);
-                zip.start_file(format!("ppt/charts/style{}.xml", chart_index + 1), *options)?;
+                zip.start_file(format!("ppt/charts/style{global_chart_num}.xml"), *options)?;
                 zip.write_all(style_xml.as_bytes())?;
                 
-                // Write chart colors XML
+                // Write chart colors XML with unique naming
                 let colors_xml = crate::generator::charts::style::generate_chart_colors_xml(chart);
-                zip.start_file(format!("ppt/charts/colors{}.xml", chart_index + 1), *options)?;
+                zip.start_file(format!("ppt/charts/colors{global_chart_num}.xml"), *options)?;
                 zip.write_all(colors_xml.as_bytes())?;
                 
-                // Write chart relationship file
+                // Write chart relationship file with standard naming
                 let chart_relationship_xml = crate::generator::charts::create_chart_relationship_xml_with_styles(
-                    chart_index + 1,
-                    &format!("chart{slide_num}_{chart_index}_data.xlsx")
+                    global_chart_num,
+                    &format!("chart{global_chart_num}_data.xlsx")
                 );
-                zip.start_file(format!("ppt/charts/_rels/chart{slide_num}_{chart_index}.xml.rels"), *options)?;
+                zip.start_file(format!("ppt/charts/_rels/chart{global_chart_num}.xml.rels"), *options)?;
                 zip.write_all(chart_relationship_xml.as_bytes())?;
                 
                 // Write Excel data file (move to embeddings directory)
                 let excel_bytes = crate::generator::charts::excel::generate_excel_bytes(chart);
-                zip.start_file(format!("ppt/embeddings/chart{slide_num}_{chart_index}_data.xlsx"), *options)?;
+                zip.start_file(format!("ppt/embeddings/chart{global_chart_num}_data.xlsx"), *options)?;
                 zip.write_all(&excel_bytes)?;
             }
+            // Increment chart counter after processing all charts in this slide
+            chart_counter += slide.charts.len();
         }
     }
     Ok(())

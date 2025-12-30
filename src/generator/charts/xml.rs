@@ -167,13 +167,13 @@ fn generate_series_data_with_number(chart: &Chart, idx: usize, series_name: &str
     let excel_writer = get_excel_writer_with_name(&chart.chart_type, worksheet_name);
     let values_ref = excel_writer.values_ref(idx);
     let name_ref = excel_writer.series_name_ref(idx);
+    let categories_ref = excel_writer.categories_ref();
     
     let mut xml = format!(
         r#"
 <c:ser>
 <c:idx val="{}"/>
 <c:order val="{}"/>
-<c:title>
 <c:tx>
 <c:strRef>
 <c:f>{}</c:f>
@@ -185,17 +185,35 @@ fn generate_series_data_with_number(chart: &Chart, idx: usize, series_name: &str
 </c:strCache>
 </c:strRef>
 </c:tx>
-</c:title>
-<c:dLbls>
-<c:showVal val="0"/>
-</c:dLbls>
+<c:cat>
+<c:strRef>
+<c:f>{}</c:f>
+<c:strCache>
+<c:ptCount val="{}"/>"#,
+        idx, idx, name_ref, escape_xml(series_name), categories_ref, chart.category_count()
+    );
+
+    for (i, cat) in chart.categories.iter().enumerate() {
+        xml.push_str(&format!(
+            r#"
+<c:pt idx="{}">
+<c:v>{}</c:v>
+</c:pt>"#,
+            i, escape_xml(cat)
+        ));
+    }
+
+    xml.push_str(
+        r#"
+</c:strCache>
+</c:strRef>
+</c:cat>
 <c:val>
 <c:numRef>
 <c:f>{}</c:f>
 <c:numCache>
 <c:formatCode>0</c:formatCode>
-<c:ptCount val="{}"/>"#,
-        idx, idx, name_ref, escape_xml(series_name), values_ref, values.len()
+<c:ptCount val="{}"/>"#
     );
 
     for (i, value) in values.iter().enumerate() {
