@@ -3,6 +3,7 @@
 //! Provides types for parsing and generating DrawingML chart elements.
 
 use super::xmlchemy::XmlElement;
+use crate::util::format_lang_attributes;
 
 /// Chart type enumeration
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -370,8 +371,10 @@ impl ChartTitle {
     }
 
     pub fn to_xml(&self) -> String {
+        let lang_attrs = format_lang_attributes();
         format!(
-            r#"<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US"/><a:t>{}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>"#,
+            r#"<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr {} dirty="0"/><a:t>{}</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title>"#,
+            lang_attrs,
             escape_xml(&self.text)
         )
     }

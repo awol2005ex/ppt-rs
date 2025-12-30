@@ -224,7 +224,7 @@ pub fn create_slide_rels_xml_with_notes(slide_num: usize) -> String {
 }
 
 /// Create slide relationship XML with chart references
-pub fn create_slide_rels_xml_with_charts(slide_num: usize, chart_count: usize, global_chart_counter: usize) -> String {
+pub fn create_slide_rels_xml_with_charts(_slide_num: usize, chart_count: usize, global_chart_counter: usize) -> String {
     let mut xml = String::from(r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
 <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>"#);
@@ -236,16 +236,6 @@ pub fn create_slide_rels_xml_with_charts(slide_num: usize, chart_count: usize, g
         xml.push_str(&format!(
             r#"
 <Relationship Id="rId{chart_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart{global_chart_num}.xml"/>"#
-        ));
-    }
-    
-    // Add Excel data relationships (for external data reference) using global chart numbering
-    for i in 0..chart_count {
-        let excel_id = chart_count + i + 2; // Continue from where chart IDs left off
-        let global_chart_num = global_chart_counter + i + 1; // Global chart number (1-based)
-        xml.push_str(&format!(
-            r#"
-<Relationship Id="rId{excel_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../embeddings/chart{global_chart_num}_data.xlsx"/>"#
         ));
     }
     
@@ -269,18 +259,8 @@ pub fn create_slide_rels_xml_with_notes_and_charts(slide_num: usize, chart_count
         ));
     }
     
-    // Add Excel data relationships (for external data reference) using global chart numbering
-    for i in 0..chart_count {
-        let excel_id = chart_count + i + 2; // Continue from where chart IDs left off
-        let global_chart_num = global_chart_counter + i + 1; // Global chart number (1-based)
-        xml.push_str(&format!(
-            r#"
-<Relationship Id="rId{excel_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/package" Target="../embeddings/chart{global_chart_num}_data.xlsx"/>"#
-        ));
-    }
-    
-    // Add notes relationship
-    let notes_id = 2 * chart_count + 2;
+    // Add notes slide relationship
+    let notes_id = chart_count + 2; // Continue from where chart IDs left off
     xml.push_str(&format!(
         r#"
 <Relationship Id="rId{notes_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/notesSlide" Target="../notesSlides/notesSlide{slide_num}.xml"/>"#

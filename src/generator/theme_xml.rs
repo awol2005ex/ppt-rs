@@ -1,5 +1,5 @@
 //! Theme, master, and layout XML generation
-
+use crate::util::format_lang_attributes;
 /// Create slide layout XML for different layout types
 pub fn create_slide_layout_xml_by_type(layout_type: &str, layout_num: usize) -> String {
     match layout_type {

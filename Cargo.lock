@@ -1690,6 +1690,7 @@ dependencies = [
  "thiserror 1.0.69",
  "url",
  "uuid",
+ "windows-sys 0.52.0",
  "xml-rs",
  "zip 0.6.6",
 ]

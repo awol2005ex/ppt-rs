@@ -652,7 +652,7 @@ fn chart_data_header(chart: &Chart) -> String {
 
 /// Generate chart data XML footer (common for all chart data files)
 fn chart_data_footer(relationship_id: Option<&str>) -> String {
-    let mut xml = String::from(r#"</c:plotArea>
+    let mut xml = String::from(r#"
 <c:legend>
 <c:legendPos val="t"/>
 <c:layout/>
@@ -771,14 +771,11 @@ fn generate_pie_chart_data_xml(chart: &Chart) -> String {
 
     xml.push_str("</c:pieChart>");
     
-    // Add plotArea styling
+    // Close plotArea before adding legend
     xml.push_str(r#"
-<c:spPr>
-<a:noFill/>
-<a:ln><a:noFill/></a:ln>
-<a:effectLst/>
-</c:spPr>"#);
+</c:plotArea>"#);
     
+    // Add legend and other elements
     xml.push_str(&chart_data_footer_with_legend(Some("rId1")));
 
     xml
@@ -1534,11 +1531,7 @@ fn generate_pie_series_with_data_points(_chart: &Chart, series_idx: usize, serie
 fn chart_data_footer_with_legend(rel_id: Option<&str>) -> String {
     let mut xml = String::new();
     
-    // Close chart element
-    xml.push_str(r#"
-</c:chart>"#);
-    
-    // Add legend section
+    // Add legend section (inside chart element)
     xml.push_str(r#"
 <c:legend>
 <c:legendPos val="t"/>
@@ -1573,7 +1566,11 @@ fn chart_data_footer_with_legend(rel_id: Option<&str>) -> String {
 <c:dispBlanksAs val="gap"/>
 <c:showDLblsOverMax val="0"/>"#);
     
-    // Add chart styling
+    // Close chart element
+    xml.push_str(r#"
+</c:chart>"#);
+    
+    // Add chart styling (outside chart element, inside chartSpace)
     xml.push_str(r#"
 <c:spPr>
 <a:noFill/>
@@ -1595,7 +1592,8 @@ fn chart_data_footer_with_legend(rel_id: Option<&str>) -> String {
         xml.push_str(&format!(
             r#"
 <c:externalData r:id="{}">
-<c:autoUpdate val="0"/>"#,
+<c:autoUpdate val="0"/>
+</c:externalData>"#,
             id
         ));
     }
