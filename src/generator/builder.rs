@@ -4,6 +4,7 @@ use std::io::{Write, Cursor};
 use zip::ZipWriter;
 use zip::write::FileOptions;
 use super::xml::*;
+use super::theme_xml::*;
 use super::notes_xml::*;
 use super::package_xml::{create_content_types_xml_with_notes, create_content_types_xml_with_charts, create_presentation_rels_xml_with_notes, create_slide_rels_xml_with_notes, create_slide_rels_xml_with_charts, create_slide_rels_xml_with_notes_and_charts};
 
@@ -51,6 +52,13 @@ fn write_package_files(
     let has_charts = custom_slides
         .map(|slides| slides.iter().any(|s| !s.charts.is_empty()))
         .unwrap_or(false);
+    
+    println!("DEBUG: has_notes={}, has_charts={}", has_notes, has_charts);
+    if let Some(slides) = custom_slides {
+        for (i, slide) in slides.iter().enumerate() {
+            println!("DEBUG: Slide {} has {} charts", i+1, slide.charts.len());
+        }
+    }
 
     // 1. Content types (with notes or charts if present)
     let content_types = if has_notes {
@@ -60,6 +68,10 @@ fn write_package_files(
     } else {
         create_content_types_xml(slide_count)
     };
+    println!("DEBUG: About to write content types XML length: {}", content_types.len());
+    println!("DEBUG: Content types XML contains 'xlsx': {}", content_types.contains("xlsx"));
+    println!("DEBUG: Content types XML contains 'chartcolorstyle': {}", content_types.contains("chartcolorstyle"));
+    println!("DEBUG: First 500 chars of content types: {}", &content_types[..content_types.len().min(500)]);
     zip.start_file("[Content_Types].xml", *options)?;
     zip.write_all(content_types.as_bytes())?;
 
@@ -106,15 +118,32 @@ fn write_package_files(
         zip.write_all(notes_master_rels.as_bytes())?;
     }
 
-    // 8. Slide layouts
-    let slide_layout = create_slide_layout_xml();
-    zip.start_file("ppt/slideLayouts/slideLayout1.xml", *options)?;
-    zip.write_all(slide_layout.as_bytes())?;
-
-    // 9. Layout relationships
-    let layout_rels = create_layout_rels_xml();
-    zip.start_file("ppt/slideLayouts/_rels/slideLayout1.xml.rels", *options)?;
-    zip.write_all(layout_rels.as_bytes())?;
+    // 8. Slide layouts - generate all 11 layout types to match WPS
+    let layout_types = vec![
+        "title",           // 1. Title slide
+        "obj",             // 2. Title and Content
+        "secHead",         // 3. Section Header
+        "twoObj",          // 4. Two Content
+        "twoTxTwoObj",     // 5. Comparison
+        "titleOnly",       // 6. Title Only
+        "blank",           // 7. Blank
+        "objTx",           // 8. Content with Caption
+        "picTx",           // 9. Picture with Caption
+        "vertTx",          // 10. Title and Vertical Text
+        "vertTitleAndTx",  // 11. Vertical Title and Text
+    ];
+    
+    for (i, layout_type) in layout_types.iter().enumerate() {
+        let layout_num = i + 1;
+        let slide_layout = create_slide_layout_xml_by_type(layout_type, layout_num);
+        zip.start_file(format!("ppt/slideLayouts/slideLayout{}.xml", layout_num), *options)?;
+        zip.write_all(slide_layout.as_bytes())?;
+        
+        // Create relationship file for each layout
+        let layout_rels = create_layout_rels_xml_for_layout(layout_num);
+        zip.start_file(format!("ppt/slideLayouts/_rels/slideLayout{}.xml.rels", layout_num), *options)?;
+        zip.write_all(layout_rels.as_bytes())?;
+    }
 
     // 10. Slide master
     let slide_master = create_slide_master_xml();
@@ -201,19 +230,23 @@ fn write_slide_relationships_with_notes(
 ) -> Result<(), Box<dyn std::error::Error>> {
     match custom_slides {
         Some(slides) => {
+            let mut global_chart_counter = 0; // Initialize global chart counter
             for (i, slide) in slides.iter().enumerate() {
                 let slide_num = i + 1;
                 let chart_count = slide.charts.len();
                 
                 let slide_rels = if slide.notes.is_some() && chart_count > 0 {
-                    create_slide_rels_xml_with_notes_and_charts(slide_num, chart_count)
+                    create_slide_rels_xml_with_notes_and_charts(slide_num, chart_count, global_chart_counter)
                 } else if slide.notes.is_some() {
                     create_slide_rels_xml_with_notes(slide_num)
                 } else if chart_count > 0 {
-                    create_slide_rels_xml_with_charts(slide_num, chart_count)
+                    create_slide_rels_xml_with_charts(slide_num, chart_count, global_chart_counter)
                 } else {
                     create_slide_rels_xml()
                 };
+                
+                // Increment global chart counter after processing this slide
+                global_chart_counter += chart_count;
                 
                 zip.start_file(format!("ppt/slides/_rels/slide{slide_num}.xml.rels"), *options)?;
                 zip.write_all(slide_rels.as_bytes())?;

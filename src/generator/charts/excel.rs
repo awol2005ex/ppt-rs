@@ -10,8 +10,14 @@ pub trait ExcelWriter {
     /// Get the Excel reference for categories
     fn categories_ref(&self) -> String;
     
+    /// Get the Excel reference for categories with specific range
+    fn categories_ref_with_range(&self, start_row: u32, end_row: u32) -> String;
+    
     /// Get the Excel reference for series values
     fn values_ref(&self, series_index: usize) -> String;
+    
+    /// Get the Excel reference for series values with specific range
+    fn values_ref_with_range(&self, series_index: usize, start_row: u32, end_row: u32) -> String;
     
     /// Get the Excel reference for series name
     fn series_name_ref(&self, series_index: usize) -> String;
@@ -21,7 +27,15 @@ pub trait ExcelWriter {
         // Default implementation - bubble charts should override this
         let col = (series_index + 2) as u16; // Column C for bubble sizes
         let col_letter = column_letter(col);
-        format!("'{}'!${col_letter}$2:${col_letter}$100", self.worksheet_name())
+        format!("{}!${col_letter}$2:${col_letter}$100", self.worksheet_name())
+    }
+    
+    /// Get the Excel reference for bubble sizes with specific range (for bubble charts)
+    fn bubble_sizes_ref_with_range(&self, series_index: usize, start_row: u32, end_row: u32) -> String {
+        // Default implementation - bubble charts should override this
+        let col = (series_index + 2) as u16; // Column C for bubble sizes
+        let col_letter = column_letter(col);
+        format!("{}!${col_letter}${}:${col_letter}${}", self.worksheet_name(), start_row as usize, end_row as usize)
     }
     
     /// Get the worksheet name for this chart (default: Sheet1)
@@ -84,7 +98,15 @@ impl ExcelWriter for CategoryExcelWriter {
     }
     
     fn categories_ref(&self) -> String {
-        format!("'{}'!$A$2:$A$100", self.worksheet_name())
+        // For category charts, we need to know the actual data size
+        // This will be handled by the caller with proper context
+        println!("DEBUG: categories_ref called (old method) for worksheet '{}'", self.worksheet_name());
+        format!("{}!$A$2:$A$100", self.worksheet_name())
+    }
+    
+    fn categories_ref_with_range(&self, start_row: u32, end_row: u32) -> String {
+        println!("DEBUG: categories_ref_with_range called with start_row={}, end_row={}", start_row, end_row);
+        format!("{}!$A${}:$A${}", self.worksheet_name(), start_row, end_row)
     }
     
     fn worksheet_name(&self) -> String {
@@ -92,15 +114,23 @@ impl ExcelWriter for CategoryExcelWriter {
     }
     
     fn values_ref(&self, series_index: usize) -> String {
-        let col = (series_index + 1) as u16;
+        let col = (series_index + 2) as u16; // +2 because column A is categories, B is first series values
         let col_letter = column_letter(col);
-        format!("'{}'!${col_letter}$2:${col_letter}$100", self.worksheet_name())
+        println!("DEBUG: values_ref called (old method) for series_index={}", series_index);
+        format!("{}!${col_letter}$2:${col_letter}$100", self.worksheet_name())
+    }
+    
+    fn values_ref_with_range(&self, series_index: usize, start_row: u32, end_row: u32) -> String {
+        let col = (series_index + 2) as u16; // +2 because column A is categories, B is first series values
+        let col_letter = column_letter(col);
+        println!("DEBUG: values_ref_with_range called for series_index={}, start_row={}, end_row={}, col={}, col_letter='{}'", series_index, start_row, end_row, col, col_letter);
+        format!("{}!${col_letter}${}:${col_letter}${}", self.worksheet_name(), start_row as usize, end_row as usize)
     }
     
     fn series_name_ref(&self, series_index: usize) -> String {
-        let col = (series_index + 1) as u16;
+        let col = (series_index + 2) as u16; // +2 because column A is categories, B is first series values
         let col_letter = column_letter(col);
-        format!("'{}'!${col_letter}$1", self.worksheet_name())
+        format!("{}!${col_letter}$1", self.worksheet_name())
     }
 }
 
@@ -155,7 +185,11 @@ impl ExcelWriter for XyExcelWriter {
     }
     
     fn categories_ref(&self) -> String {
-        format!("'{}'!$A$2:$A$100", self.worksheet_name()) // Default range
+        format!("{}!$A$2:$A$100", self.worksheet_name()) // Default range
+    }
+    
+    fn categories_ref_with_range(&self, start_row: u32, end_row: u32) -> String {
+        format!("{}!$A${}:$A${}", self.worksheet_name(), start_row, end_row)
     }
     
     fn worksheet_name(&self) -> String {
@@ -164,12 +198,17 @@ impl ExcelWriter for XyExcelWriter {
     
     fn values_ref(&self, series_index: usize) -> String {
         let offset = series_index * 3;
-        format!("'{}'!$B${}:$B${}", self.worksheet_name(), offset + 2, offset + 100)
+        format!("{}!$B${}:$B${}", self.worksheet_name(), offset + 2, offset + 100)
+    }
+    
+    fn values_ref_with_range(&self, series_index: usize, start_row: u32, end_row: u32) -> String {
+        let offset = series_index * 3;
+        format!("{}!$B${}:$B${}", self.worksheet_name(), offset + start_row as usize, offset + end_row as usize)
     }
     
     fn series_name_ref(&self, series_index: usize) -> String {
         let offset = series_index * 3;
-        format!("'{}'!$B${}", self.worksheet_name(), offset + 1)
+        format!("{}!$B${}", self.worksheet_name(), offset + 1)
     }
 }
 
@@ -195,17 +234,26 @@ impl ExcelWriter for BubbleExcelWriter {
     }
     
     fn categories_ref(&self) -> String {
-        format!("'{}'!$A$2:$A$100", self.worksheet_name()) // Default range for X values
+        format!("{}!$A$2:$A$100", self.worksheet_name()) // Default range for X values
+    }
+    
+    fn categories_ref_with_range(&self, start_row: u32, end_row: u32) -> String {
+        format!("{}!$A${}:$A${}", self.worksheet_name(), start_row, end_row)
     }
     
     fn values_ref(&self, series_index: usize) -> String {
         let offset = series_index * 4;
-        format!("'{}'!$B${}:$B${}", self.worksheet_name(), offset + 2, offset + 100)
+        format!("{}!$B${}:$B${}", self.worksheet_name(), offset + 2, offset + 100)
+    }
+    
+    fn values_ref_with_range(&self, series_index: usize, start_row: u32, end_row: u32) -> String {
+        let offset = series_index * 4;
+        format!("{}!$B${}:$B${}", self.worksheet_name(), offset + start_row as usize, offset + end_row as usize)
     }
     
     fn series_name_ref(&self, series_index: usize) -> String {
         let offset = series_index * 4;
-        format!("'{}'!$B${}", self.worksheet_name(), offset + 1)
+        format!("{}!$B${}", self.worksheet_name(), offset + 1)
     }
     
     fn worksheet_name(&self) -> String {
