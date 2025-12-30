@@ -715,8 +715,13 @@ fn generate_bar_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str(&generate_category_axis_for_chart(chart, "l"));
-    xml.push_str(&generate_value_axis_for_chart("b"));
+    xml.push_str(&generate_value_axis_for_chart("b", 2));
     xml.push_str("</c:barChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -739,8 +744,13 @@ fn generate_line_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
-    xml.push_str(&generate_value_axis_for_chart("l"));
+    xml.push_str(&generate_value_axis_for_chart("l", 2));
     xml.push_str("</c:lineChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -795,6 +805,11 @@ fn generate_doughnut_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str("</c:doughnutChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -817,8 +832,13 @@ fn generate_area_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
-    xml.push_str(&generate_value_axis_for_chart("l"));
+    xml.push_str(&generate_value_axis_for_chart("l", 2));
     xml.push_str("</c:areaChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -840,9 +860,14 @@ fn generate_scatter_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_for_scatter_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
-    xml.push_str(&generate_value_axis_for_chart("b"));
-    xml.push_str(&generate_value_axis_for_chart("l"));
+    xml.push_str(&generate_value_axis_for_chart("b", 2));
+    xml.push_str(&generate_value_axis_for_chart("l", 3));
     xml.push_str("</c:scatterChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -860,9 +885,14 @@ fn generate_bubble_chart_data_xml(chart: &Chart) -> String {
         xml.push_str(&generate_series_data_for_bubble_with_number(chart, idx, &series.name, &series.values, 1));
     }
 
-    xml.push_str(&generate_value_axis_for_chart("b"));
-    xml.push_str(&generate_value_axis_for_chart("l"));
+    xml.push_str(&generate_value_axis_for_chart("b", 2));
+    xml.push_str(&generate_value_axis_for_chart("l", 3));
     xml.push_str("</c:bubbleChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -885,8 +915,13 @@ fn generate_radar_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
-    xml.push_str(&generate_value_axis_for_chart("l"));
+    xml.push_str(&generate_value_axis_for_chart("l", 2));
     xml.push_str("</c:radarChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -904,8 +939,13 @@ fn generate_stock_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
-    xml.push_str(&generate_value_axis_for_chart("l"));
+    xml.push_str(&generate_value_axis_for_chart("l", 2));
     xml.push_str("</c:stockChart>");
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
+    
     xml.push_str(&chart_data_footer(Some("rId1")));
 
     xml
@@ -926,7 +966,7 @@ fn generate_combo_chart_data_xml(chart: &Chart) -> String {
     }
 
     xml.push_str(&generate_category_axis_for_chart(chart, "b"));
-    xml.push_str(&generate_value_axis_for_chart("l"));
+    xml.push_str(&generate_value_axis_for_chart("l", 2));
     xml.push_str("</c:barChart>");
 
     // Second half as lines
@@ -940,6 +980,10 @@ fn generate_combo_chart_data_xml(chart: &Chart) -> String {
 
         xml.push_str("</c:lineChart>");
     }
+    
+    // Close plotArea before adding legend
+    xml.push_str(r#"
+</c:plotArea>"#);
 
     xml.push_str(&chart_data_footer(Some("rId1")));
 
@@ -1396,11 +1440,11 @@ fn generate_category_axis_for_chart(_chart: &Chart, ax_pos: &str) -> String {
 }
 
 /// Generate value axis XML for chart data files
-fn generate_value_axis_for_chart(ax_pos: &str) -> String {
+fn generate_value_axis_for_chart(ax_pos: &str, ax_id: i32) -> String {
     format!(
         r#"
 <c:valAx>
-<c:axId val="2"/>
+<c:axId val="{}"/>
 <c:scaling>
 <c:orientation val="minMax"/>
 </c:scaling>
@@ -1412,7 +1456,7 @@ fn generate_value_axis_for_chart(ax_pos: &str) -> String {
 <c:crossAx val="1"/>
 <c:crosses val="autoZero"/>
 </c:valAx>"#,
-        ax_pos
+        ax_id, ax_pos
     )
 }
 
