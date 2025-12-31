@@ -163,7 +163,6 @@ fn generate_series_data(chart: &Chart, idx: usize, series_name: &str, values: &[
 
 /// Generate series data XML using Excel references with specific chart number
 fn generate_series_data_with_number(chart: &Chart, idx: usize, series_name: &str, values: &[f64], chart_number: usize) -> String {
-    println!("DEBUG: generate_series_data_with_number called for chart {:?}, series {}, chart_number {}", chart.chart_type, series_name, chart_number);
     
     let worksheet_name = worksheet_name_for_chart(chart_number);
     let excel_writer = get_excel_writer_with_name(&chart.chart_type, worksheet_name);
@@ -177,10 +176,6 @@ fn generate_series_data_with_number(chart: &Chart, idx: usize, series_name: &str
     let name_ref = excel_writer.series_name_ref(idx);
     let categories_ref = excel_writer.categories_ref_with_range(start_row, end_row);
     
-    println!("DEBUG: generate_series_data_with_number - idx={}, series_name='{}'", idx, series_name);
-    println!("DEBUG: category_count={}, start_row={}, end_row={}", category_count, start_row, end_row);
-    println!("DEBUG: values_ref='{}'", values_ref);
-    println!("DEBUG: categories_ref='{}'", categories_ref);
     
     let mut xml = format!(
         r#"
@@ -267,9 +262,6 @@ fn generate_category_axis_with_number(chart: &Chart, ax_pos: &str, chart_number:
     let end_row = start_row + data_count as u32 - 1;
     
     let categories_ref = excel_writer.categories_ref_with_range(start_row, end_row);
-    
-    println!("DEBUG: category_axis chart_number={}, data_count={}, start_row={}, end_row={}", chart_number, data_count, start_row, end_row);
-    println!("DEBUG: category_axis categories_ref='{}'", categories_ref);
     
     let mut xml = format!(
         r#"
@@ -1315,10 +1307,6 @@ fn generate_series_data_for_scatter_with_number(_chart: &Chart, idx: usize, seri
     let categories_ref = excel_writer.categories_ref_with_range(start_row, end_row);
     let values_ref = excel_writer.values_ref_with_range(idx, start_row, end_row);
     
-    println!("DEBUG: scatter chart_number={}, data_count={}, start_row={}, end_row={}", chart_number, data_count, start_row, end_row);
-    println!("DEBUG: scatter categories_ref='{}'", categories_ref);
-    println!("DEBUG: scatter values_ref='{}'", values_ref);
-    
     let mut xml = format!(
         r#"
 <c:ser>
@@ -1416,10 +1404,6 @@ fn generate_series_data_for_bubble_with_number(_chart: &Chart, idx: usize, serie
     let values_ref = excel_writer.values_ref_with_range(idx, start_row, end_row);
     let bubble_sizes_ref = excel_writer.bubble_sizes_ref_with_range(idx, start_row, end_row);
     
-    println!("DEBUG: bubble chart_number={}, data_count={}, start_row={}, end_row={}", chart_number, data_count, start_row, end_row);
-    println!("DEBUG: bubble categories_ref='{}'", categories_ref);
-    println!("DEBUG: bubble values_ref='{}'", values_ref);
-    println!("DEBUG: bubble sizes_ref='{}'", bubble_sizes_ref);
     
     let mut xml = format!(
         r#"

@@ -53,12 +53,7 @@ fn write_package_files(
         .map(|slides| slides.iter().any(|s| !s.charts.is_empty()))
         .unwrap_or(false);
     
-    println!("DEBUG: has_notes={}, has_charts={}", has_notes, has_charts);
-    if let Some(slides) = custom_slides {
-        for (i, slide) in slides.iter().enumerate() {
-            println!("DEBUG: Slide {} has {} charts", i+1, slide.charts.len());
-        }
-    }
+    
 
     // 1. Content types (with notes or charts if present)
     let content_types = if has_notes {
@@ -68,10 +63,6 @@ fn write_package_files(
     } else {
         create_content_types_xml(slide_count)
     };
-    println!("DEBUG: About to write content types XML length: {}", content_types.len());
-    println!("DEBUG: Content types XML contains 'xlsx': {}", content_types.contains("xlsx"));
-    println!("DEBUG: Content types XML contains 'chartcolorstyle': {}", content_types.contains("chartcolorstyle"));
-    println!("DEBUG: First 500 chars of content types: {}", &content_types[..content_types.len().min(500)]);
     zip.start_file("[Content_Types].xml", *options)?;
     zip.write_all(content_types.as_bytes())?;
 

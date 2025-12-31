@@ -32,13 +32,11 @@ pub fn create_content_types_xml(slides: usize) -> String {
 <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
 <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
 </Types>"#);
-    println!("DEBUG: Final XML content types: {}", xml);
     xml
 }
 
 /// Create [Content_Types].xml with chart support
 pub fn create_content_types_xml_with_charts(slides: usize, custom_slides: Option<&Vec<super::slide_content::SlideContent>>) -> String {
-    println!("DEBUG: create_content_types_xml_with_charts called with {} slides", slides);
     let mut xml = r#"<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
 <Default Extension="xlsx" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"/>
@@ -46,7 +44,6 @@ pub fn create_content_types_xml_with_charts(slides: usize, custom_slides: Option
 <Default Extension="xml" ContentType="application/xml"/>
 <Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>"#.to_string();
     
-    println!("DEBUG: Initial XML after header: {}", xml);
 
     for i in 1..=slides {
         xml.push_str(&format!(
@@ -56,15 +53,12 @@ pub fn create_content_types_xml_with_charts(slides: usize, custom_slides: Option
 
     // Add chart content types using global chart numbering
     if let Some(slides_vec) = custom_slides {
-        println!("DEBUG: Processing {} custom slides", slides_vec.len());
         let mut global_chart_counter = 0; // Initialize chart counter for global chart numbering
         for (i, slide) in slides_vec.iter().enumerate() {
-            println!("DEBUG: Slide {} has {} charts", i+1, slide.charts.len());
             if !slide.charts.is_empty() {
                 let slide_num = i + 1;
                 for chart_index in 0..slide.charts.len() {
                     let global_chart_num = global_chart_counter + chart_index + 1; // Global chart number (1-based)
-                    println!("DEBUG: Adding chart content types for global chart {}", global_chart_num);
                     xml.push_str(&format!(
                         "\n<Override PartName=\"/ppt/charts/chart{global_chart_num}.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.drawingml.chart+xml\"/>"
                     ));
@@ -83,9 +77,7 @@ pub fn create_content_types_xml_with_charts(slides: usize, custom_slides: Option
                 global_chart_counter += slide.charts.len();
             }
         }
-    } else {
-        println!("DEBUG: No custom slides provided");
-    }
+    } 
 
     xml.push_str(r#"
 <Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/>

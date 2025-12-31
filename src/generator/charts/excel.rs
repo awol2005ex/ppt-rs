@@ -100,12 +100,10 @@ impl ExcelWriter for CategoryExcelWriter {
     fn categories_ref(&self) -> String {
         // For category charts, we need to know the actual data size
         // This will be handled by the caller with proper context
-        println!("DEBUG: categories_ref called (old method) for worksheet '{}'", self.worksheet_name());
         format!("{}!$A$2:$A$100", self.worksheet_name())
     }
     
     fn categories_ref_with_range(&self, start_row: u32, end_row: u32) -> String {
-        println!("DEBUG: categories_ref_with_range called with start_row={}, end_row={}", start_row, end_row);
         format!("{}!$A${}:$A${}", self.worksheet_name(), start_row, end_row)
     }
     
@@ -116,14 +114,12 @@ impl ExcelWriter for CategoryExcelWriter {
     fn values_ref(&self, series_index: usize) -> String {
         let col = (series_index + 2) as u16; // +2 because column A is categories, B is first series values
         let col_letter = column_letter(col);
-        println!("DEBUG: values_ref called (old method) for series_index={}", series_index);
         format!("{}!${col_letter}$2:${col_letter}$100", self.worksheet_name())
     }
     
     fn values_ref_with_range(&self, series_index: usize, start_row: u32, end_row: u32) -> String {
         let col = (series_index + 2) as u16; // +2 because column A is categories, B is first series values
         let col_letter = column_letter(col);
-        println!("DEBUG: values_ref_with_range called for series_index={}, start_row={}, end_row={}, col={}, col_letter='{}'", series_index, start_row, end_row, col, col_letter);
         format!("{}!${col_letter}${}:${col_letter}${}", self.worksheet_name(), start_row as usize, end_row as usize)
     }
     
