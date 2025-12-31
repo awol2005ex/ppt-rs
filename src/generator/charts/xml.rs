@@ -499,9 +499,14 @@ fn generate_scatter_chart_xml_with_number(chart: &Chart, shape_id: usize, chart_
         xml.push_str(&generate_series_data_for_scatter_with_number(chart, idx, &series.name, &series.values, chart_number));
     }
 
-    xml.push_str(&generate_value_axis_for_chart("b", 2));
-    xml.push_str(&generate_value_axis_for_chart("l", 3));
+    // 添加轴ID引用（在图表内部）
+    xml.push_str("<c:axId val=\"1\"/>");  // X轴 (valAx)
+    xml.push_str("<c:axId val=\"2\"/>");  // Y轴 (valAx)
     xml.push_str("</c:scatterChart>");
+    
+    // 轴定义放在图表外部 - 确保在plotArea内但在scatterChart外
+    xml.push_str(&generate_value_axis_for_scatter_chart("b", 1, 2));  // X轴，crossAx指向Y轴
+    xml.push_str(&generate_value_axis_for_scatter_chart("l", 2, 1));  // Y轴，crossAx指向X轴
     xml.push_str(&chart_frame_footer(Some("rId1")));
 
     xml
@@ -920,8 +925,8 @@ fn generate_scatter_chart_data_xml(chart: &Chart) -> String {
     }
 
     // 添加轴ID引用（在图表内部）
-    xml.push_str("<c:axId val=\"2\"/>");  // X轴 (valAx)
-    xml.push_str("<c:axId val=\"3\"/>");  // Y轴 (valAx)
+    xml.push_str("<c:axId val=\"1\"/>");  // X轴 (valAx)
+    xml.push_str("<c:axId val=\"2\"/>");  // Y轴 (valAx)
     xml.push_str("</c:scatterChart>");
     
     // 轴定义放在图表外部 - 确保在plotArea内但在scatterChart外
@@ -935,9 +940,9 @@ fn generate_scatter_chart_data_xml(chart: &Chart) -> String {
 <c:majorGridlines/>
 <c:numFmt formatCode="0" sourceLinked="0"/>
 <c:tickLblPos val="low"/>
-<c:crossAx val="1"/>
+<c:crossAx val="2"/>
 <c:crosses val="autoZero"/>
-</c:valAx>"#, 2));
+</c:valAx>"#, 1));
     
     xml.push_str("<c:valAx>");
     xml.push_str(&format!(r#"<c:axId val="{}"/>
@@ -951,7 +956,7 @@ fn generate_scatter_chart_data_xml(chart: &Chart) -> String {
 <c:tickLblPos val="low"/>
 <c:crossAx val="1"/>
 <c:crosses val="autoZero"/>
-</c:valAx>"#, 3));
+</c:valAx>"#, 2));
     
     // Close plotArea before adding legend
     xml.push_str(r#"
@@ -1556,6 +1561,27 @@ fn generate_value_axis_for_chart(ax_pos: &str, ax_id: i32) -> String {
 <c:crosses val="autoZero"/>
 </c:valAx>"#,
         ax_id, ax_pos
+    )
+}
+
+/// Generate value axis XML for scatter charts
+fn generate_value_axis_for_scatter_chart(ax_pos: &str, ax_id: i32, cross_ax_id: i32) -> String {
+    format!(
+        r#"
+<c:valAx>
+<c:axId val="{}"/>
+<c:scaling>
+<c:orientation val="minMax"/>
+</c:scaling>
+<c:delete val="0"/>
+<c:axPos val="{}"/>
+<c:majorGridlines/>
+<c:numFmt formatCode="0" sourceLinked="0"/>
+<c:tickLblPos val="low"/>
+<c:crossAx val="{}"/>
+<c:crosses val="autoZero"/>
+</c:valAx>"#,
+        ax_id, ax_pos, cross_ax_id
     )
 }
 
